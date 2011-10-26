@@ -196,6 +196,7 @@ namespace Mooege.Core.GS.Actors
 
         public virtual void OnTargeted(Mooege.Core.GS.Player.Player player, TargetMessage message)
         {
+            Interaction();
         }
 
         /// <summary>
@@ -293,6 +294,17 @@ namespace Mooege.Core.GS.Actors
             player.InGameClient.SendMessage(new ACDDestroyActorMessage(this.DynamicID));
             player.RevealedObjects.Remove(this.DynamicID);
             return true;
+        }
+
+        public virtual void Die(Mooege.Core.GS.Player.Player player)
+        {
+            World.Game.QuestEngine.GetCurrentQuest().OnDeath(this);
+            World.Game.QuestEngine.UpdateQuestStatus();
+        }
+
+        public virtual void Interaction()
+        {
+            World.Game.QuestEngine.GetCurrentQuest().OnInteraction(this);
         }
     }
 }

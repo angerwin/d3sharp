@@ -129,8 +129,10 @@ namespace Mooege.Core.GS.Actors
         }
 
         // FIXME: Hardcoded hell. /komiga
-        public void Die(Mooege.Core.GS.Player.Player player)
+        public override void Die(Mooege.Core.GS.Player.Player player)
         {
+            base.Die(player);
+
             var killAni = new int[]{
                     0x2cd7,
                     0x2cd4,

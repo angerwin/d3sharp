@@ -26,7 +26,7 @@ using Mooege.Common.MPQ.FileFormats.Types;
 namespace Mooege.Common.MPQ.FileFormats
 {
     [FileFormat(SNOGroup.Quest)]
-    class Quest : FileFormat
+    public class Quest : FileFormat
     {
         public Header Header;
         public QuestType QuestType;

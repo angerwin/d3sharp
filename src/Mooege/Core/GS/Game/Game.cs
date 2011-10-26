@@ -29,6 +29,7 @@ using Mooege.Net.GS.Message;
 using Mooege.Net.GS.Message.Definitions.Game;
 using Mooege.Net.GS.Message.Definitions.Player;
 using Mooege.Net.GS.Message.Fields;
+using Mooege.Core.GS.Quests;
 
 // TODO: Move scene stuff into a Map class (which can also handle the efficiency stuff and object grouping)
 
@@ -68,6 +69,8 @@ namespace Mooege.Core.GS.Game
         public uint NewObjectID { get { return _lastObjectID++; } }
         public uint NewSceneID { get { return _lastSceneID++; } }
         public uint NewWorldID { get { return _lastWorldID++; } }
+
+        public QuestEngine QuestEngine;
 
         public Game(int gameId)
         {
@@ -120,6 +123,12 @@ namespace Mooege.Core.GS.Game
 
         public void Enter(Player.Player joinedPlayer)
         {
+
+            // TODO: multiplayer 
+            QuestEngine = new QuestEngine(joinedPlayer);
+            QuestEngine.LoadQuests();
+            QuestEngine.UpdateQuestStatus();
+
             this.Players.TryAdd(joinedPlayer.InGameClient, joinedPlayer);
 
             // send all players in the game to new player that just joined (including him)

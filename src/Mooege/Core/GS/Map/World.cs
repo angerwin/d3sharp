@@ -127,7 +127,11 @@ namespace Mooege.Core.GS.Map
             // but we shouldn't be using it for movement of actors (like players) -- they should be instead using NotifyActorMovementMessage /raist.
 
             if (!actor.HasWorldLocation) return;
-            if (actor is Player.Player) return; // don't send position ACDWorldPositionMessage for players, else it'll breake movement for them.  /raist.
+            if (actor is Player.Player)
+            {
+                Game.QuestEngine.GetCurrentQuest().OnPositionUpdate(prevPosition);
+                return; // don't send position ACDWorldPositionMessage for players, else it'll breake movement for them.  /raist.
+            }
 
             BroadcastIfRevealed(actor.ACDWorldPositionMessage, actor);            
         }
@@ -145,6 +149,8 @@ namespace Mooege.Core.GS.Map
             {
                 actor.Reveal(player);
             }
+
+            Game.QuestEngine.GetCurrentQuest().OnEnterWorld(this);
         }
 
         public void Leave(Actor actor)
