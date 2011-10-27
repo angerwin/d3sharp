@@ -195,8 +195,7 @@ namespace Mooege.Core.GS.Actors
         }
 
         public virtual void OnTargeted(Mooege.Core.GS.Player.Player player, TargetMessage message)
-        {
-            Interaction();
+        {            
         }
 
         /// <summary>
@@ -298,13 +297,18 @@ namespace Mooege.Core.GS.Actors
 
         public virtual void Die(Mooege.Core.GS.Player.Player player)
         {
-            World.Game.QuestEngine.GetCurrentQuest().OnDeath(this);
-            World.Game.QuestEngine.UpdateQuestStatus();
+            World.Game.QuestEngine.OnDeath(this);            
         }
 
-        public virtual void Interaction()
+        public virtual void Interaction(Mooege.Core.GS.Player.Player player)
         {
-            World.Game.QuestEngine.GetCurrentQuest().OnInteraction(this);
+            World.Game.QuestEngine.OnInteraction(this);
+        }
+
+        public virtual void StartConversation(Mooege.Core.GS.Player.Player player)
+        {
+            // TODO: do the actually Conversation Stuff
+            base._world.Game.QuestEngine.OnInteraction(this);
         }
     }
 }

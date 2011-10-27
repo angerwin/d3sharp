@@ -29,6 +29,8 @@ using Mooege.Net.GS.Message.Definitions.Hero;
 using Mooege.Net.GS.Message.Definitions.Misc;
 using System;
 using Mooege.Common.Extensions;
+using Mooege.Core.GS.Actors;
+using Mooege.Net.GS.Message.Fields;
 
 namespace Mooege.Net.GS
 {
@@ -87,6 +89,8 @@ namespace Mooege.Net.GS
                 client.BnetClient = toon.Owner.LoggedInClient;
                 client.BnetClient.InGameClient = client;
 
+
+
                 client.Player = new Player(game.StartWorld, client, toon);
                 Logger.Info("Player {0}[PlayerIndex: {1}] connected.", client.Player.Properties.Name, client.Player.PlayerIndex);
 
@@ -126,6 +130,21 @@ namespace Mooege.Net.GS
                 Logger.Trace("Log in time:"+toon.LoginTime.ToString());
 
                 game.Enter(client.Player);
+
+                NPC leah = new NPC(game.StartWorld, 4580, new Vector3D { 
+                    X = client.Player.Position.X - 10,
+                    Y = client.Player.Position.Y,
+                    Z = client.Player.Position.Z,
+
+                });
+
+                NPC rumfort = new NPC(game.StartWorld, 3739, new Vector3D
+                {
+                    X = client.Player.Position.X - 20,
+                    Y = client.Player.Position.Y,
+                    Z = client.Player.Position.Z,
+
+                });
             }
         }    
     }

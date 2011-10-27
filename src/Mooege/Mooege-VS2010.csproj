@@ -132,6 +132,7 @@
     <Compile Include="Core\Common\Items\ItemCreation\WeaponAttributeCreator.cs" />
     <Compile Include="Common\MPQ\MPQPatchChain.cs" />
     <Compile Include="Common\MPQ\MPQStorage.cs" />
+    <Compile Include="Core\GS\Actors\NPC.cs" />
     <Compile Include="Core\GS\Game\GameCommands.cs" />
     <Compile Include="Core\GS\Game\GameManager.cs" />
     <Compile Include="Core\GS\Player\Equipment.cs" />

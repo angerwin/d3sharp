@@ -70,7 +70,7 @@ namespace Mooege.Core.GS.Game
         public uint NewSceneID { get { return _lastSceneID++; } }
         public uint NewWorldID { get { return _lastWorldID++; } }
 
-        public QuestEngine QuestEngine;
+        public IQuestEngine QuestEngine;
 
         public Game(int gameId)
         {
@@ -125,10 +125,9 @@ namespace Mooege.Core.GS.Game
         {
 
             // TODO: multiplayer 
-            QuestEngine = new QuestEngine(joinedPlayer);
+            QuestEngine = new PlayerQuestEngine(joinedPlayer);
             QuestEngine.LoadQuests();
-            QuestEngine.UpdateQuestStatus();
-
+           
             this.Players.TryAdd(joinedPlayer.InGameClient, joinedPlayer);
 
             // send all players in the game to new player that just joined (including him)

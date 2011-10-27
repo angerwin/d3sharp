@@ -27,7 +27,7 @@ using Gibbed.IO;
 namespace Mooege.Common.MPQ.FileFormats
 {
     [FileFormat(SNOGroup.Conversation)]
-    class Conversation : FileFormat
+    public class Conversation : FileFormat
     {
         public Header Header;
         public ConversationTypes ConversationType;

@@ -129,7 +129,7 @@ namespace Mooege.Core.GS.Map
             if (!actor.HasWorldLocation) return;
             if (actor is Player.Player)
             {
-                Game.QuestEngine.GetCurrentQuest().OnPositionUpdate(prevPosition);
+                Game.QuestEngine.OnPositionUpdate(prevPosition);
                 return; // don't send position ACDWorldPositionMessage for players, else it'll breake movement for them.  /raist.
             }
 
@@ -150,7 +150,7 @@ namespace Mooege.Core.GS.Map
                 actor.Reveal(player);
             }
 
-            Game.QuestEngine.GetCurrentQuest().OnEnterWorld(this);
+            Game.QuestEngine.OnEnterWorld(this);
         }
 
         public void Leave(Actor actor)
