@@ -30,6 +30,7 @@ using Mooege.Net.GS.Message.Definitions.Game;
 using Mooege.Net.GS.Message.Definitions.Player;
 using Mooege.Net.GS.Message.Fields;
 using Mooege.Core.GS.Quests;
+using Mooege.Core.GS.Events;
 
 // TODO: Move scene stuff into a Map class (which can also handle the efficiency stuff and object grouping)
 
@@ -71,6 +72,7 @@ namespace Mooege.Core.GS.Game
         public uint NewWorldID { get { return _lastWorldID++; } }
 
         public QuestEngine QuestEngine;
+        public EventManager EventManager;
 
         public Game(int gameId)
         {
@@ -82,6 +84,10 @@ namespace Mooege.Core.GS.Game
 
             var loopThread=new Thread(Update) { IsBackground = true };
             loopThread.Start();
+
+            // TODO: multiplayer 
+            QuestEngine = new PlayerQuestEngine(this);
+            EventManager = new EventManager(this);           
         }
 
         public void Update() // the main game-loop.
@@ -124,9 +130,7 @@ namespace Mooege.Core.GS.Game
         public void Enter(Player.Player joinedPlayer)
         {
 
-            // TODO: multiplayer 
-            QuestEngine = new PlayerQuestEngine(joinedPlayer);
-            QuestEngine.LoadQuests();
+            QuestEngine.AddPlayer(joinedPlayer);
            
             this.Players.TryAdd(joinedPlayer.InGameClient, joinedPlayer);
 

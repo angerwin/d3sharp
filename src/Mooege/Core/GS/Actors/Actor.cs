@@ -302,13 +302,13 @@ namespace Mooege.Core.GS.Actors
 
         public virtual void Interaction(Mooege.Core.GS.Player.Player player)
         {
-            World.Game.QuestEngine.OnInteraction(this);
+            World.Game.QuestEngine.OnInteraction(player, this);
         }
 
         public virtual void StartConversation(Mooege.Core.GS.Player.Player player)
         {
             // TODO: do the actually Conversation Stuff
-            base._world.Game.QuestEngine.OnInteraction(this);
+            base._world.Game.QuestEngine.OnInteraction(player, this);
         }
     }
 }

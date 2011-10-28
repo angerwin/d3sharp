@@ -56,14 +56,14 @@ namespace Mooege.Core.GS.Quests
 
         }
 
-        public void OnInteraction(Actors.Actor actor)
+        public void OnInteraction(Player.Player player, Actors.Actor actor)
         {
             if (_objectivData.objectiveType == QuestStepObjectiveType.HadConversation)
             {
                 Conversation conversation = (Conversation)MPQStorage.Data.Assets[SNOGroup.Conversation][_objectivData.SNOName1.SNOId].Data;
                 if (conversation.SNOPrimaryNpc == actor.ActorSNO)
                 {
-                    _engine.InitiateConversation(conversation, actor);
+                    _engine.InitiateConversation(player, conversation, actor);
                     _completed = true;
                     return;
                 }
@@ -75,6 +75,32 @@ namespace Mooege.Core.GS.Quests
                 return;
             }
 
+        }
+
+
+        public void OnEvent(int eventSNOId)
+        {
+            if (_objectivData.objectiveType == QuestStepObjectiveType.EventReceived)
+            {
+                if (_objectivData.SNOName1.SNOId == eventSNOId)
+                {                    
+                    _completed = true;
+                    return;
+                }
+            }
+        }
+
+
+        public void OnQuestCompleted(int questSNOId)
+        {
+            if (_objectivData.objectiveType == QuestStepObjectiveType.CompleteQuest)
+            {
+                if (_objectivData.SNOName1.SNOId == questSNOId)
+                {
+                    _completed = true;
+                    return;
+                }
+            }
         }
     }
    

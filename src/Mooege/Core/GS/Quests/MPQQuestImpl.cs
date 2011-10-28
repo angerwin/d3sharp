@@ -40,14 +40,16 @@ namespace Mooege.Core.GS.Quests
 
         public GameMessage CreateQuestUpdateMessage()
         {
+            
             QuestUpdateMessage message = new QuestUpdateMessage
             {
-                Failed = false,
-                Field3 = true,
+                Failed = _isFailed,
+                Field3 = _isActive,
                 snoQuest = _questData.Header.SNOId,
-                StepID = GetQuestStep().I0,
+                StepID = (GetQuestStep() != null) ? GetQuestStep().I0 : -1,                    
             };
             return message;
+            
         }
 
         public bool IsActive()
@@ -85,6 +87,7 @@ namespace Mooege.Core.GS.Quests
             {
                 _isCompleted = true;
                 _isActive = false;
+                _engine.OnQuestCompleted(_questData.Header.SNOId);
             }
             else
             {
@@ -94,12 +97,30 @@ namespace Mooege.Core.GS.Quests
                 {
                     foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
                     {
-                        _objectiveList.Add(new QuestObjectivImpl(_engine, objectiv));
+
+                        if (objectiv.objectiveType == QuestStepObjectiveType.EventReceived
+                            || objectiv.objectiveType == QuestStepObjectiveType.EnterLevelArea
+                            || objectiv.objectiveType == QuestStepObjectiveType.EnterWorld
+                            || objectiv.objectiveType == QuestStepObjectiveType.EnterTrigger
+                            || objectiv.objectiveType == QuestStepObjectiveType.EnterScene
+                            || objectiv.objectiveType == QuestStepObjectiveType.GameFlagSet
+                            || objectiv.objectiveType == QuestStepObjectiveType.PlayerFlagSet
+                            || objectiv.objectiveType == QuestStepObjectiveType.TimedEventExpired
+                            || objectiv.objectiveType == QuestStepObjectiveType.CompleteQuest)
+                        {
+                            // ObjectiveType cannot handled at the moment - just ignore this objective
+                        }
+                        else
+                        {
+                            _objectiveList.Add(new QuestObjectivImpl(_engine, objectiv));
+                        }
                     }
                 }
             }
 
             this._engine.UpdateQuestStatus(this);
+
+           
         }
 
 
@@ -110,8 +131,6 @@ namespace Mooege.Core.GS.Quests
 
         public void OnDeath(Actors.Actor actor)
         {
-
-            OnInteraction(actor); // TODO: at the moment Interaction is not possible. So use kill as interaction
             foreach (QuestObjectivImpl objectiv in ActiveObjectives)
             {
                 objectiv.OnDeath(actor);
@@ -149,11 +168,11 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-        public void OnInteraction(Actors.Actor actor)
+        public void OnInteraction(Player.Player player, Actors.Actor actor)
         {
             foreach (QuestObjectivImpl objectiv in ActiveObjectives)
             {
-                objectiv.OnInteraction(actor);
+                objectiv.OnInteraction(player, actor);
             }
 
             if (ActiveObjectives.Count == 0)
@@ -165,6 +184,34 @@ namespace Mooege.Core.GS.Quests
         public void Cancel()
         {
             throw new NotImplementedException();
+        }
+
+
+        public void OnEvent(int eventSNOId)
+        {
+            foreach (QuestObjectivImpl objectiv in ActiveObjectives)
+            {
+                objectiv.OnEvent(eventSNOId);
+            }
+
+            if (ActiveObjectives.Count == 0)
+            {
+                NextQuestStep();
+            }
+        }
+
+
+        public void OnQuestCompleted(int questSNOId)
+        {
+            foreach (QuestObjectivImpl objectiv in ActiveObjectives)
+            {
+                objectiv.OnQuestCompleted(questSNOId);
+            }
+
+            if (ActiveObjectives.Count == 0)
+            {
+                NextQuestStep();
+            }
         }
     }
 

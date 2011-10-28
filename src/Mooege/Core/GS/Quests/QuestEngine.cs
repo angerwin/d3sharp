@@ -15,7 +15,6 @@ using Mooege.Net.GS.Message;
 using Mooege.Net.GS.Message.Definitions.Conversation;
 using Mooege.Common.Helpers;
 
-
 namespace Mooege.Core.GS.Quests
 {
 
@@ -27,16 +26,24 @@ namespace Mooege.Core.GS.Quests
 
         void OnEnterWorld(Mooege.Core.GS.Map.World world);
 
-        void OnInteraction(Mooege.Core.GS.Actors.Actor actor);
+        void OnInteraction(Player.Player player, Mooege.Core.GS.Actors.Actor actor);
+
+        void OnEvent(int eventSNOId);
+
+        void OnQuestCompleted(int questSNOId);
     }
 
     public interface QuestEngine : QuestNotifiable
     {
         void UpdateQuestStatus(IQuest quest);
 
-        void LoadQuests();
+        void StartQuest(int questSNOId);
 
-        void InitiateConversation(Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
+        void InitiateConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
+
+        void AddPlayer(Player.Player joinedPlayer);
+
+        void StartEvent(int p);
     }
 
     public interface IQuest : QuestNotifiable
@@ -63,27 +70,62 @@ namespace Mooege.Core.GS.Quests
         private static readonly Logger Logger = LogManager.CreateLogger();
         
         private List<IQuest> _questList;
-        private Player.Player _player;
+        private List<Player.Player> _players;
+        private Game.Game _game;
 
-        public PlayerQuestEngine(Player.Player player)
+        public PlayerQuestEngine(Game.Game game)
         {
-            this._player = player;
-        }                
-
-        public void UpdateQuestStatus(IQuest quest)
-        {
-            Debug.Assert(quest != null);
-            _player.InGameClient.SendMessage(quest.CreateQuestUpdateMessage(), true);
+            this._players = new List<Player.Player>();
+            _questList = new List<IQuest>();
+            _game = game;
+            
+            // FIXME: hardcoded start of main quest
+            StartQuest(87700);
         }
 
-        public void LoadQuests()
+        public void AddPlayer(Player.Player player)
         {
-            int key = MPQStorage.Data.Assets[SNOGroup.Quest].Keys.ElementAt(0);
-            Quest questData = (Quest)(MPQStorage.Data.Assets[SNOGroup.Quest][key].Data);
-            IQuest quest = new MPQQuest(questData);
-            _questList = new List<IQuest>();
-            _questList.Add(quest);
 
+            if (!_players.Contains(player))
+            {
+                _players.Add(player);                                    
+                UpdateAllQuests(player);
+            }
+        }
+
+        public void RemovePlayer(Player.Player player)
+        {
+            if(_players.Contains(player)){
+                _players.Remove(player);
+            }
+        }
+
+        public void UpdateAllQuests(Player.Player player)
+        {
+            foreach (IQuest quest in ActiveQuests)
+            {
+                GameMessage message = quest.CreateQuestUpdateMessage();
+                player.InGameClient.SendMessage(message, true);
+            }
+        }
+
+        public void UpdateQuestStatus(IQuest quest)
+        {            
+            GameMessage message = quest.CreateQuestUpdateMessage();
+            if (message != null)
+            {
+                foreach (Player.Player player in _players)
+                {
+                    player.InGameClient.SendMessage(message, true);
+                }
+            }
+        }
+
+        public void StartQuest(int questSNOId)
+        {            
+            Quest questData = (Quest)(MPQStorage.Data.Assets[SNOGroup.Quest][questSNOId].Data);
+            IQuest quest = new MPQQuest(questData);
+            _questList.Add(quest);
             quest.Start(this);
         }
 
@@ -116,18 +158,42 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-        public void OnInteraction(Actors.Actor actor)
+        public void OnInteraction(Player.Player player, Actors.Actor actor)
         {
             foreach (IQuest quest in ActiveQuests)
             {
-                quest.OnInteraction(actor);
+                quest.OnInteraction(player, actor);
             }
         }
 
-        public void InitiateConversation(Conversation conversation, Mooege.Core.GS.Actors.Actor actor)
+        public void InitiateConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor)
         {
             // TODO: Dummy implementation
-            _player.PlayHeroConversation(conversation.Header.SNOId, 0);
+            player.PlayHeroConversation(conversation.Header.SNOId, 0);
+        }
+
+
+        public void OnEvent(int eventSNOId)
+        {
+            foreach (IQuest quest in ActiveQuests)
+            {
+                quest.OnEvent(eventSNOId);
+            }
+        }
+
+
+        public void StartEvent(int eventSNOId)
+        {
+            _game.EventManager.StartEvent(eventSNOId);            
+        }
+
+
+        public void OnQuestCompleted(int questSNOId)
+        {
+            foreach (IQuest quest in ActiveQuests)
+            {
+                quest.OnQuestCompleted(questSNOId);
+            }
         }
     }
 }
