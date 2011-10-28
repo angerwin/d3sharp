@@ -326,6 +326,7 @@ namespace Mooege.Core.GS.Player
             else if (message is PlayerChangeHotbarButtonMessage) OnPlayerChangeHotbarButtonMessage(client, (PlayerChangeHotbarButtonMessage)message);
             else if (message is TargetMessage) OnObjectTargeted(client, (TargetMessage)message);
             else if (message is PlayerMovementMessage) OnPlayerMovement(client, (PlayerMovementMessage)message);
+            else if (message is RequestCloseConversationWindowMessage) OnPlayerRequestCloseConversation(client, (RequestCloseConversationWindowMessage)message);            
             else return;
 
             UpdateState();
@@ -1263,6 +1264,15 @@ namespace Mooege.Core.GS.Player
                 .Build();
 
             return new GenericBlobMessage(Opcodes.GenericBlobMessage6) {Data = playerBanner.ToByteArray()};
+        }
+
+        private void OnPlayerRequestCloseConversation(GameClient client, RequestCloseConversationWindowMessage message)
+        {
+            foreach (OpenConversation openConversation in this.OpenConversations)
+            {
+                this.InGameClient.SendMessage(openConversation.endConversationMessage);
+            }
+            this.OpenConversations.Clear();
         }
     }
 }

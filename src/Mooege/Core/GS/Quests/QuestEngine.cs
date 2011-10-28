@@ -30,7 +30,7 @@ namespace Mooege.Core.GS.Quests
         void OnInteraction(Mooege.Core.GS.Actors.Actor actor);
     }
 
-    public interface IQuestEngine : QuestNotifiable
+    public interface QuestEngine : QuestNotifiable
     {
         void UpdateQuestStatus(IQuest quest);
 
@@ -49,7 +49,7 @@ namespace Mooege.Core.GS.Quests
 
         void SendQuestInformation(GameClient client);
 
-        void Start(IQuestEngine engine);
+        void Start(QuestEngine engine);
         
         void Cancel();
 
@@ -57,12 +57,7 @@ namespace Mooege.Core.GS.Quests
         
     }
 
-    public interface QuestChain
-    {
-        IQuest GetNext();
-    }
-
-    public class PlayerQuestEngine : IQuestEngine
+    public class PlayerQuestEngine : QuestEngine
     {
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -129,240 +124,10 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-
         public void InitiateConversation(Conversation conversation, Mooege.Core.GS.Actors.Actor actor)
         {
             // TODO: Dummy implementation
-            _player.PlayHeroConversation(0x0002A73F, RandomHelper.Next(0, 8));               
-        }
-    }
-
-
-    public class MPQQuest : IQuest
-    {
-
-        private Quest _questData;
-        private List<QuestStep>.Enumerator _stepEnumerator;
-        private List<QuestObjectiv> _objectiveList;
-              
-        private Boolean _isFailed = false;
-        private Boolean _isCompleted = false;
-        private Boolean _isActive = false;
-
-        private IQuestEngine _engine;
-
-        public MPQQuest(Quest quest)
-        {
-            this._questData = quest;            
-        }
-        
-        public QuestStep GetQuestStep()
-        {
-            return _stepEnumerator.Current;
-        }
-
-        public List<QuestStepObjectiveSet> GetQuestStepGoals()
-        {
-            return GetQuestStep().StepObjectiveSets;
-        }
-
-        public GameMessage CreateQuestUpdateMessage()
-        {
-            QuestUpdateMessage message = new QuestUpdateMessage
-            {
-                Failed = false,
-                Field3 = true,
-                snoQuest = _questData.Header.SNOId,
-                StepID = GetQuestStep().I0,
-            };          
-            return message;
-        }
-
-        public bool IsActive()
-        {
-            return _isActive;
-        }
-
-        public bool IsFailed()
-        {
-            return _isFailed;
-        }
-
-        public bool IsCompleted()
-        {
-            return _isCompleted;
-        }
-
-        public void SendQuestInformation(GameClient client)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Start(IQuestEngine engine)
-        {
-            this._engine = engine;
-            _stepEnumerator = this._questData.QuestSteps.GetEnumerator();
-            NextQuestStep();
-        }
-        
-
-        private void NextQuestStep()
-        {
-            _stepEnumerator.MoveNext();
-            if (_stepEnumerator.Current == null)
-            {
-                _isCompleted = true;
-                _isActive = false;
-            }
-            else
-            {
-                _isActive = true;
-                _objectiveList = new List<QuestObjectiv>();
-                foreach (QuestStepObjectiveSet objectivSet in GetQuestStepGoals())
-                {
-                    foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
-                    {
-                        _objectiveList.Add(new QuestObjectiv(_engine, objectiv));
-                    }
-                }               
-            }
-
-            this._engine.UpdateQuestStatus(this);
-        }
-
-
-        private List<QuestObjectiv> ActiveObjectives
-        {
-            get { return _objectiveList.Where(objectiv => !objectiv.isCompleted()).ToList(); }
-        }
-
-        public void OnDeath(Actors.Actor actor)
-        {
-
-            OnInteraction(actor); // TODO: at the moment Interaction is not possible. So use kill as interaction
-            foreach (QuestObjectiv objectiv in ActiveObjectives)
-            {
-                objectiv.OnDeath(actor);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-        public void OnPositionUpdate(Vector3D position)
-        {
-            foreach (QuestObjectiv objectiv in ActiveObjectives)
-            {
-                objectiv.OnPositionUpdate(position);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-        public void OnEnterWorld(Map.World world)
-        {
-            foreach (QuestObjectiv objectiv in ActiveObjectives)
-            {
-                objectiv.OnEnterWorld(world);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-        public void OnInteraction(Actors.Actor actor)
-        {
-            foreach (QuestObjectiv objectiv in ActiveObjectives)
-            {
-                objectiv.OnInteraction(actor);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-        public void Cancel()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-
-    public class QuestObjectiv : QuestNotifiable
-    {
-
-        private QuestStepObjective _objectiv;
-        private Boolean _completed;
-        private IQuestEngine _engine;
-        
-        public QuestObjectiv(IQuestEngine engine, QuestStepObjective objectiv)
-        {        
-            this._objectiv = objectiv;
-            this._completed = false;
-            this._engine = engine;
-        }
-
-        public Boolean isCompleted()
-        {
-            return _completed;
-        }
-
-        public void OnDeath(Actors.Actor actor)
-        {
-            if (_objectiv.objectiveType == QuestStepObjectiveType.KillGroup)
-            {
-                _completed = true;
-                return;
-            }
-
-            if (_objectiv.objectiveType == QuestStepObjectiveType.KillMonster)
-            {
-                if (actor.ActorSNO == _objectiv.SNOName1.SNOId)
-                {
-                    _completed = true;
-                    return;
-                }
-            }
-        }
-
-        public void OnPositionUpdate(Vector3D position)
-        {
-            
-        }
-
-        public void OnEnterWorld(Map.World world)
-        {
-            
-        }
-
-        public void OnInteraction(Actors.Actor actor)
-        {
-            if (_objectiv.objectiveType == QuestStepObjectiveType.HadConversation)
-            {
-                Conversation conversation = (Conversation)MPQStorage.Data.Assets[SNOGroup.Conversation][_objectiv.SNOName1.SNOId].Data;
-                if (conversation.SNOPrimaryNpc == actor.ActorSNO)
-                {
-                    _engine.InitiateConversation(conversation, actor);
-                    _completed = true;
-                    return;
-                }
-            }
-
-            if (_objectiv.objectiveType == QuestStepObjectiveType.InteractWithActor)
-            {
-                _completed = true;
-                return;
-            }
-            
+            _player.PlayHeroConversation(conversation.Header.SNOId, 0);
         }
     }
 }

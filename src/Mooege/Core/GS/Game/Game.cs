@@ -70,7 +70,7 @@ namespace Mooege.Core.GS.Game
         public uint NewSceneID { get { return _lastSceneID++; } }
         public uint NewWorldID { get { return _lastWorldID++; } }
 
-        public IQuestEngine QuestEngine;
+        public QuestEngine QuestEngine;
 
         public Game(int gameId)
         {
