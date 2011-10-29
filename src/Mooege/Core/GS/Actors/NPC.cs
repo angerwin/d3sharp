@@ -10,6 +10,7 @@ using Mooege.Common.MPQ;
 using Mooege.Common.Helpers;
 using Mooege.Net.GS.Message;
 using Mooege.Net.GS.Message.Definitions.Conversation;
+using Mooege.Core.GS.Common.Types.Math;
 
 namespace Mooege.Core.GS.Actors
 {

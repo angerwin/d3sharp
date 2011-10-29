@@ -7,6 +7,7 @@ using Mooege.Net.GS.Message;
 using Mooege.Net.GS.Message.Definitions.Quest;
 using Mooege.Net.GS;
 using Mooege.Net.GS.Message.Fields;
+using Mooege.Core.GS.Common.Types.Math;
 
 namespace Mooege.Core.GS.Quests
 {
@@ -15,7 +16,7 @@ namespace Mooege.Core.GS.Quests
 
         private Quest _questData;
         private List<QuestStep>.Enumerator _stepEnumerator;
-        private List<QuestObjectivImpl> _objectiveList;
+        private List<IQuestObjective> _objectiveList;
 
         private Boolean _isFailed = false;
         private Boolean _isCompleted = false;
@@ -31,6 +32,11 @@ namespace Mooege.Core.GS.Quests
         public QuestStep GetQuestStep()
         {
             return _stepEnumerator.Current;
+        }
+
+        public List<QuestCompletionStep> GetCompletionSteps()
+        {
+            return _questData.QuestCompletionSteps;
         }
 
         public List<QuestStepObjectiveSet> GetQuestStepGoals()
@@ -65,6 +71,11 @@ namespace Mooege.Core.GS.Quests
         public bool IsCompleted()
         {
             return _isCompleted;
+        }
+
+        public int SNOId()
+        {
+            return _questData.Header.SNOId;
         }
 
         public void SendQuestInformation(GameClient client)
@@ -103,21 +114,18 @@ namespace Mooege.Core.GS.Quests
 
         private void AddQuestObjectives(List<QuestStepObjectiveSet> objectiveSets)
         {
-            _objectiveList = new List<QuestObjectivImpl>();
+            _objectiveList = new List<IQuestObjective>();
             foreach (QuestStepObjectiveSet objectivSet in objectiveSets)
             {
                 foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
                 {
 
-                    if (objectiv.objectiveType == QuestStepObjectiveType.EventReceived
-                        || objectiv.objectiveType == QuestStepObjectiveType.EnterLevelArea
-                        || objectiv.objectiveType == QuestStepObjectiveType.EnterWorld
-                        || objectiv.objectiveType == QuestStepObjectiveType.EnterTrigger
-                        || objectiv.objectiveType == QuestStepObjectiveType.EnterScene
-                        || objectiv.objectiveType == QuestStepObjectiveType.GameFlagSet
-                        || objectiv.objectiveType == QuestStepObjectiveType.PlayerFlagSet
-                        || objectiv.objectiveType == QuestStepObjectiveType.TimedEventExpired
-                        || objectiv.objectiveType == QuestStepObjectiveType.CompleteQuest)
+                    if (objectiv.ObjectiveType == QuestStepObjectiveType.EventReceived
+                        || objectiv.ObjectiveType == QuestStepObjectiveType.EnterLevelArea                      
+                        || objectiv.ObjectiveType == QuestStepObjectiveType.EnterTrigger                        
+                        || objectiv.ObjectiveType == QuestStepObjectiveType.GameFlagSet
+                        || objectiv.ObjectiveType == QuestStepObjectiveType.PlayerFlagSet
+                        || objectiv.ObjectiveType == QuestStepObjectiveType.TimedEventExpired)
                     {
                         // ObjectiveType cannot handled at the moment - just ignore this objective
                     }
@@ -130,14 +138,14 @@ namespace Mooege.Core.GS.Quests
             
         }
 
-        private List<QuestObjectivImpl> ActiveObjectives
+        private List<IQuestObjective> ActiveObjectives
         {
-            get { return _objectiveList.Where(objectiv => !objectiv.isCompleted()).ToList(); }
+            get { return (List<IQuestObjective>)_objectiveList.Where(objectiv => !objectiv.IsCompleted()).ToList(); }
         }
 
         public void OnDeath(Actors.Actor actor)
         {
-            foreach (QuestObjectivImpl objectiv in ActiveObjectives)
+            foreach (IQuestObjective objectiv in ActiveObjectives)
             {
                 objectiv.OnDeath(actor);
             }
@@ -150,7 +158,7 @@ namespace Mooege.Core.GS.Quests
 
         public void OnPositionUpdate(Vector3D position)
         {
-            foreach (QuestObjectivImpl objectiv in ActiveObjectives)
+            foreach (IQuestObjective objectiv in ActiveObjectives)
             {
                 objectiv.OnPositionUpdate(position);
             }
@@ -163,7 +171,7 @@ namespace Mooege.Core.GS.Quests
 
         public void OnEnterWorld(Map.World world)
         {
-            foreach (QuestObjectivImpl objectiv in ActiveObjectives)
+            foreach (IQuestObjective objectiv in ActiveObjectives)
             {
                 objectiv.OnEnterWorld(world);
             }
@@ -176,7 +184,7 @@ namespace Mooege.Core.GS.Quests
 
         public void OnInteraction(Player.Player player, Actors.Actor actor)
         {
-            foreach (QuestObjectivImpl objectiv in ActiveObjectives)
+            foreach (IQuestObjective objectiv in ActiveObjectives)
             {
                 objectiv.OnInteraction(player, actor);
             }
@@ -195,7 +203,7 @@ namespace Mooege.Core.GS.Quests
 
         public void OnEvent(int eventSNOId)
         {
-            foreach (QuestObjectivImpl objectiv in ActiveObjectives)
+            foreach (IQuestObjective objectiv in ActiveObjectives)
             {
                 objectiv.OnEvent(eventSNOId);
             }
@@ -209,9 +217,23 @@ namespace Mooege.Core.GS.Quests
 
         public void OnQuestCompleted(int questSNOId)
         {
-            foreach (QuestObjectivImpl objectiv in ActiveObjectives)
+            foreach (IQuestObjective objectiv in ActiveObjectives)
             {
                 objectiv.OnQuestCompleted(questSNOId);
+            }
+
+            if (ActiveObjectives.Count == 0)
+            {
+                NextQuestStep();
+            }
+        }
+
+
+        public void OnEnterScene(Map.Scene scene)
+        {
+            foreach (IQuestObjective objectiv in ActiveObjectives)
+            {
+                objectiv.OnEnterScene(scene);
             }
 
             if (ActiveObjectives.Count == 0)

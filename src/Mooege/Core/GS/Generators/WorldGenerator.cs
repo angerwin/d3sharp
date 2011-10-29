@@ -152,6 +152,8 @@ namespace Mooege.Core.GS.Generators
                 }
                 scene.Specification = sceneChunk.SceneSpecification;
                 scene.LoadActors();
+
+                game.QuestEngine.OnEnterScene(scene);
             }
 
             return world;

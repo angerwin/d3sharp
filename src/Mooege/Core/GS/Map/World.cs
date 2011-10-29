@@ -142,11 +142,12 @@ namespace Mooege.Core.GS.Map
             {
                 actor.Reveal(player);
             }
-            Game.QuestEngine.OnEnterWorld(this);
-
+        
             if (actor is Player.Player)
                 foreach (Actor a in _actors.Values)
                     a.Reveal(actor as Player.Player);
+
+            Game.QuestEngine.OnEnterWorld(this);
         }
 
         public void Leave(Actor actor)

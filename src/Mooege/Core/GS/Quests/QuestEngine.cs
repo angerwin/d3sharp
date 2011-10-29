@@ -14,6 +14,8 @@ using Mooege.Net.GS.Message.Definitions.Quest;
 using Mooege.Net.GS.Message;
 using Mooege.Net.GS.Message.Definitions.Conversation;
 using Mooege.Common.Helpers;
+using Mooege.Core.GS.Common.Types.Math;
+using Mooege.Core.GS.Common.Types.SNO;
 
 namespace Mooege.Core.GS.Quests
 {
@@ -31,6 +33,8 @@ namespace Mooege.Core.GS.Quests
         void OnEvent(int eventSNOId);
 
         void OnQuestCompleted(int questSNOId);
+
+        void OnEnterScene(Map.Scene scene);
     }
 
     public interface QuestEngine : QuestNotifiable
@@ -41,7 +45,7 @@ namespace Mooege.Core.GS.Quests
 
         void AddPlayer(Player.Player joinedPlayer);
 
-        void StartEvent(int p);
+        void AddQuest(IQuest quest);
     }
 
     public interface IQuest : QuestNotifiable
@@ -59,7 +63,58 @@ namespace Mooege.Core.GS.Quests
         void Cancel();
 
         GameMessage CreateQuestUpdateMessage();
-        
+
+        int SNOId();
+
+        List<QuestCompletionStep> GetCompletionSteps();
+    }
+
+    public interface IQuestObjective : QuestNotifiable
+    {      
+        Boolean IsCompleted();
+    }
+
+    public class MainQuestManager
+    {
+        private QuestEngine _engine;
+        private MPQQuest activeMainQuest;
+
+        private List<int> _mainQuestList;
+        private IEnumerator<int> _questListEnumerator;
+        public MainQuestManager(QuestEngine engine)
+        {
+            _engine = engine;
+
+            _mainQuestList = new List<int>();
+            _mainQuestList.Add(87700); // ProtectorOfTristram.qst
+            _mainQuestList.Add(72095); // RescueCain.qst
+            _mainQuestList.Add(72221); // Blacksmith.qst
+            _mainQuestList.Add(72738); // Nephalem_Power.qst
+            _mainQuestList.Add(72061); // King Leoric
+
+            _questListEnumerator = _mainQuestList.GetEnumerator();
+
+        }
+
+        public void LoadNextMainQuest()
+        {
+
+            _questListEnumerator.MoveNext();
+            Quest questData = (Quest)(MPQStorage.Data.Assets[SNOGroup.Quest][_questListEnumerator.Current].Data);
+            activeMainQuest = new MPQQuest(questData);
+            _engine.AddQuest(activeMainQuest);
+            
+        }
+
+
+
+        internal void OnQuestCompleted(int questSNOId)
+        {
+            if (questSNOId == activeMainQuest.SNOId())
+            {
+                LoadNextMainQuest();
+            }
+        }
     }
 
     public class PlayerQuestEngine : QuestEngine
@@ -70,12 +125,14 @@ namespace Mooege.Core.GS.Quests
         private List<IQuest> _questList;
         private List<Player.Player> _players;
         private Game.Game _game;
+        private MainQuestManager _mainQuestManager;
 
         public PlayerQuestEngine(Game.Game game)
         {
             this._players = new List<Player.Player>();
             _questList = new List<IQuest>();
             _game = game;
+            _mainQuestManager = new MainQuestManager(this);
             LoadQuests();     
         }
 
@@ -119,13 +176,13 @@ namespace Mooege.Core.GS.Quests
 
         public void LoadQuests()
         {
-            foreach (int key in MPQStorage.Data.Assets[SNOGroup.Quest].Keys)
-            {
-                Quest questData = (Quest)(MPQStorage.Data.Assets[SNOGroup.Quest][key].Data);
-                IQuest quest = new MPQQuest(questData);
-                _questList.Add(quest);
-                quest.Start(this);
-            }
+            _mainQuestManager.LoadNextMainQuest();
+        }
+
+        public void AddQuest(IQuest quest)
+        {
+            _questList.Add(quest);
+            quest.Start(this);
         }
 
         private List<IQuest> ActiveQuests
@@ -180,18 +237,21 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-
-        public void StartEvent(int eventSNOId)
-        {
-            _game.EventManager.StartEvent(eventSNOId);            
-        }
-
-
         public void OnQuestCompleted(int questSNOId)
         {
             foreach (IQuest quest in ActiveQuests)
             {
                 quest.OnQuestCompleted(questSNOId);
+            }
+            _mainQuestManager.OnQuestCompleted(questSNOId);
+        }
+
+
+        public void OnEnterScene(Map.Scene scene)
+        {
+            foreach (IQuest quest in ActiveQuests)
+            {
+                quest.OnEnterScene(scene);
             }
         }
     }

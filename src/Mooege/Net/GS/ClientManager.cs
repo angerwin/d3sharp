@@ -31,6 +31,7 @@ using System;
 using Mooege.Common.Extensions;
 using Mooege.Core.GS.Actors;
 using Mooege.Net.GS.Message.Fields;
+using Mooege.Core.GS.Common.Types.Math;
 
 namespace Mooege.Net.GS
 {

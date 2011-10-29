@@ -7,11 +7,13 @@ using Mooege.Net.GS.Message.Fields;
 using Mooege.Common.MPQ;
 using System.Diagnostics;
 using Mooege.Common;
+using Mooege.Core.GS.Common.Types.SNO;
+using Mooege.Core.GS.Common.Types.Math;
 
 namespace Mooege.Core.GS.Quests
 {
 
-    public class QuestObjectivImpl : QuestNotifiable
+    public class QuestObjectivImpl : IQuestObjective
     {
 
         static readonly Logger Logger = LogManager.CreateLogger();
@@ -28,20 +30,20 @@ namespace Mooege.Core.GS.Quests
             this._engine = engine;
         }
 
-        public Boolean isCompleted()
+        public Boolean IsCompleted()
         {
             return _completed;
         }
 
         public void OnDeath(Actors.Actor actor)
         {
-            if (_objectivData.objectiveType == QuestStepObjectiveType.KillGroup)
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.KillGroup)
             {
                 _completed = true;
                 return;
             }
 
-            if (_objectivData.objectiveType == QuestStepObjectiveType.KillMonster)
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.KillMonster)
             {
                 if (actor.ActorSNO == _objectivData.SNOName1.SNOId)
                 {
@@ -63,7 +65,7 @@ namespace Mooege.Core.GS.Quests
 
         public void OnInteraction(Player.Player player, Actors.Actor actor)
         {
-            if (_objectivData.objectiveType == QuestStepObjectiveType.HadConversation)
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.HadConversation)
             {                
                 if(MPQStorage.Data.Assets[SNOGroup.Conversation].ContainsKey(_objectivData.SNOName1.SNOId))
                 {
@@ -81,10 +83,13 @@ namespace Mooege.Core.GS.Quests
                 }
             }
 
-            if (_objectivData.objectiveType == QuestStepObjectiveType.InteractWithActor)
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.InteractWithActor)
             {
-                _completed = true;
-                return;
+                if (_objectivData.SNOName1.SNOId == actor.ActorSNO)
+                {
+                    _completed = true;
+                    return;
+                }
             }
 
         }
@@ -92,7 +97,7 @@ namespace Mooege.Core.GS.Quests
 
         public void OnEvent(int eventSNOId)
         {
-            if (_objectivData.objectiveType == QuestStepObjectiveType.EventReceived)
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.EventReceived)
             {
                 if (_objectivData.SNOName1.SNOId == eventSNOId)
                 {                    
@@ -105,9 +110,22 @@ namespace Mooege.Core.GS.Quests
 
         public void OnQuestCompleted(int questSNOId)
         {
-            if (_objectivData.objectiveType == QuestStepObjectiveType.CompleteQuest)
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.CompleteQuest)
             {
                 if (_objectivData.SNOName1.SNOId == questSNOId)
+                {
+                    _completed = true;
+                    return;
+                }
+            }
+        }
+
+
+        public void OnEnterScene(Map.Scene scene)
+        {
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.EnterScene)
+            {
+                if (_objectivData.SNOName1.SNOId == scene.SceneSNO)
                 {
                     _completed = true;
                     return;
