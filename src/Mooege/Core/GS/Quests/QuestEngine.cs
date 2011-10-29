@@ -35,9 +35,7 @@ namespace Mooege.Core.GS.Quests
 
     public interface QuestEngine : QuestNotifiable
     {
-        void UpdateQuestStatus(IQuest quest);
-
-        void StartQuest(int questSNOId);
+        void UpdateQuestStatus(IQuest quest);        
 
         void InitiateConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
 
@@ -78,9 +76,7 @@ namespace Mooege.Core.GS.Quests
             this._players = new List<Player.Player>();
             _questList = new List<IQuest>();
             _game = game;
-            
-            // FIXME: hardcoded start of main quest
-            StartQuest(87700);
+            LoadQuests();     
         }
 
         public void AddPlayer(Player.Player player)
@@ -121,17 +117,20 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-        public void StartQuest(int questSNOId)
-        {            
-            Quest questData = (Quest)(MPQStorage.Data.Assets[SNOGroup.Quest][questSNOId].Data);
-            IQuest quest = new MPQQuest(questData);
-            _questList.Add(quest);
-            quest.Start(this);
+        public void LoadQuests()
+        {
+            foreach (int key in MPQStorage.Data.Assets[SNOGroup.Quest].Keys)
+            {
+                Quest questData = (Quest)(MPQStorage.Data.Assets[SNOGroup.Quest][key].Data);
+                IQuest quest = new MPQQuest(questData);
+                _questList.Add(quest);
+                quest.Start(this);
+            }
         }
 
         private List<IQuest> ActiveQuests
         {
-            get { return _questList.Where(quest => quest.IsActive()).ToList(); }
+            get { return _questList.Where(quest => quest.IsCompleted() == false && quest.IsFailed() == false).ToList(); }
         }        
 
         public void OnDeath(Actors.Actor actor)

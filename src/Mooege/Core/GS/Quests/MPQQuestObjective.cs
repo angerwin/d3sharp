@@ -5,12 +5,17 @@ using System.Text;
 using Mooege.Common.MPQ.FileFormats;
 using Mooege.Net.GS.Message.Fields;
 using Mooege.Common.MPQ;
+using System.Diagnostics;
+using Mooege.Common;
 
 namespace Mooege.Core.GS.Quests
 {
 
     public class QuestObjectivImpl : QuestNotifiable
     {
+
+        static readonly Logger Logger = LogManager.CreateLogger();
+
 
         private QuestStepObjective _objectivData;
         private Boolean _completed;
@@ -59,13 +64,20 @@ namespace Mooege.Core.GS.Quests
         public void OnInteraction(Player.Player player, Actors.Actor actor)
         {
             if (_objectivData.objectiveType == QuestStepObjectiveType.HadConversation)
-            {
-                Conversation conversation = (Conversation)MPQStorage.Data.Assets[SNOGroup.Conversation][_objectivData.SNOName1.SNOId].Data;
-                if (conversation.SNOPrimaryNpc == actor.ActorSNO)
+            {                
+                if(MPQStorage.Data.Assets[SNOGroup.Conversation].ContainsKey(_objectivData.SNOName1.SNOId))
                 {
-                    _engine.InitiateConversation(player, conversation, actor);
-                    _completed = true;
-                    return;
+                    Conversation conversation = (Conversation)MPQStorage.Data.Assets[SNOGroup.Conversation][_objectivData.SNOName1.SNOId].Data;
+                    if (conversation.SNOPrimaryNpc == actor.ActorSNO)
+                    {
+                        _engine.InitiateConversation(player, conversation, actor);
+                        _completed = true;
+                        return;
+                    }
+                }
+                else
+                {
+                    Logger.Error("unknown conversation id " + _objectivData.SNOName1.SNOId);
                 }
             }
 

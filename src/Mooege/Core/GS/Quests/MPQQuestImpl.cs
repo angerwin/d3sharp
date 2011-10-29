@@ -75,8 +75,8 @@ namespace Mooege.Core.GS.Quests
         public void Start(QuestEngine engine)
         {
             this._engine = engine;
-            _stepEnumerator = this._questData.QuestSteps.GetEnumerator();
-            NextQuestStep();
+            _stepEnumerator = this._questData.QuestSteps.GetEnumerator();            
+            AddQuestObjectives(this._questData.QuestUnassignedStep.StepObjectiveSets);
         }
 
 
@@ -91,31 +91,8 @@ namespace Mooege.Core.GS.Quests
             }
             else
             {
-                _isActive = true;
-                _objectiveList = new List<QuestObjectivImpl>();
-                foreach (QuestStepObjectiveSet objectivSet in GetQuestStepGoals())
-                {
-                    foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
-                    {
-
-                        if (objectiv.objectiveType == QuestStepObjectiveType.EventReceived
-                            || objectiv.objectiveType == QuestStepObjectiveType.EnterLevelArea
-                            || objectiv.objectiveType == QuestStepObjectiveType.EnterWorld
-                            || objectiv.objectiveType == QuestStepObjectiveType.EnterTrigger
-                            || objectiv.objectiveType == QuestStepObjectiveType.EnterScene
-                            || objectiv.objectiveType == QuestStepObjectiveType.GameFlagSet
-                            || objectiv.objectiveType == QuestStepObjectiveType.PlayerFlagSet
-                            || objectiv.objectiveType == QuestStepObjectiveType.TimedEventExpired
-                            || objectiv.objectiveType == QuestStepObjectiveType.CompleteQuest)
-                        {
-                            // ObjectiveType cannot handled at the moment - just ignore this objective
-                        }
-                        else
-                        {
-                            _objectiveList.Add(new QuestObjectivImpl(_engine, objectiv));
-                        }
-                    }
-                }
+                _isActive = true;                
+                AddQuestObjectives(GetQuestStepGoals());                
             }
 
             this._engine.UpdateQuestStatus(this);
@@ -123,6 +100,35 @@ namespace Mooege.Core.GS.Quests
            
         }
 
+
+        private void AddQuestObjectives(List<QuestStepObjectiveSet> objectiveSets)
+        {
+            _objectiveList = new List<QuestObjectivImpl>();
+            foreach (QuestStepObjectiveSet objectivSet in objectiveSets)
+            {
+                foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
+                {
+
+                    if (objectiv.objectiveType == QuestStepObjectiveType.EventReceived
+                        || objectiv.objectiveType == QuestStepObjectiveType.EnterLevelArea
+                        || objectiv.objectiveType == QuestStepObjectiveType.EnterWorld
+                        || objectiv.objectiveType == QuestStepObjectiveType.EnterTrigger
+                        || objectiv.objectiveType == QuestStepObjectiveType.EnterScene
+                        || objectiv.objectiveType == QuestStepObjectiveType.GameFlagSet
+                        || objectiv.objectiveType == QuestStepObjectiveType.PlayerFlagSet
+                        || objectiv.objectiveType == QuestStepObjectiveType.TimedEventExpired
+                        || objectiv.objectiveType == QuestStepObjectiveType.CompleteQuest)
+                    {
+                        // ObjectiveType cannot handled at the moment - just ignore this objective
+                    }
+                    else
+                    {
+                        _objectiveList.Add(new QuestObjectivImpl(_engine, objectiv));
+                    }
+                }
+            }
+            
+        }
 
         private List<QuestObjectivImpl> ActiveObjectives
         {
