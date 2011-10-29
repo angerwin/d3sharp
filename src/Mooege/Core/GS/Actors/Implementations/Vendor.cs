@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2011 mooege project
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,26 +19,23 @@
 using Mooege.Core.GS.Common.Types.Math;
 using Mooege.Core.GS.Map;
 using Mooege.Net.GS.Message;
+using Mooege.Net.GS.Message.Definitions.Trade;
+using Mooege.Net.GS.Message.Definitions.World;
 
-namespace Mooege.Core.GS.Actors
+namespace Mooege.Core.GS.Actors.Implementations
 {
-    public class NPC : Living
+    [HandledSNO(178396 /* Fence_In_Town_01? */)] //TODO this is just a test, do it properly for all vendors?
+    public class Vendor : InteractiveNPC
     {
-        public override ActorType ActorType { get { return ActorType.NPC; } }
-
-        public NPC(World world, int actorSNO, Vector3D position)
+        public Vendor(World world, int actorSNO, Vector3D position)
             : base(world, actorSNO, position)
         {
-            this.Field2 = 0x9;
-            this.Field7 = 1;
-            this.Field8 = actorSNO; //TODO check if this is not true for every actor / living? /fasbat
-            this.Attributes[GameAttribute.TeamID] = 1;
-            this.Attributes[GameAttribute.Is_NPC] = true;
+            this.Attributes[GameAttribute.MinimapActive] = true;
         }
 
-		public override void OnTargeted(Mooege.Core.GS.Player.Player player, TargetMessage message)
+        public override void OnTargeted(Mooege.Core.GS.Player.Player player, TargetMessage message)
         {
-            StartConversation(player);
+            player.InGameClient.SendMessage(new OpenTradeWindowMessage((int)this.DynamicID));
         }
     }
 }

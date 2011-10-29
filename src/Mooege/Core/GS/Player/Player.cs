@@ -1295,5 +1295,32 @@ namespace Mooege.Core.GS.Player
             }
             this.OpenConversations.Clear();
         }
+
+        public GenericBlobMessage GetBlacksmithData()
+        {
+            var blacksmith = D3.ItemCrafting.CrafterData.CreateBuilder()
+                .SetLevel(45)
+                .SetCooldownEnd(0)
+                .Build();
+            return new GenericBlobMessage(Opcodes.GenericBlobMessage8) { Data = blacksmith.ToByteArray() };
+        }
+
+        public GenericBlobMessage GetJewelerData()
+        {
+            var jeweler = D3.ItemCrafting.CrafterData.CreateBuilder()
+                .SetLevel(9)
+                .SetCooldownEnd(0)
+                .Build();
+            return new GenericBlobMessage(Opcodes.GenericBlobMessage9) { Data = jeweler.ToByteArray() };
+        }
+
+        public GenericBlobMessage GetMysticData()
+        {
+            var mystic = D3.ItemCrafting.CrafterData.CreateBuilder()
+                .SetLevel(45)
+                .SetCooldownEnd(0)
+                .Build();
+            return new GenericBlobMessage(Opcodes.GenericBlobMessage10) { Data = mystic.ToByteArray() };
+        }
     }
 }
