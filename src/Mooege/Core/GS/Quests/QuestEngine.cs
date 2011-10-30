@@ -46,6 +46,8 @@ namespace Mooege.Core.GS.Quests
         void AddPlayer(Player.Player joinedPlayer);
 
         void AddQuest(IQuest quest);
+
+        void UpdateQuestStepObjective(IQuestObjective questObjectivImpl);
     }
 
     public interface IQuest : QuestNotifiable
@@ -72,6 +74,8 @@ namespace Mooege.Core.GS.Quests
     public interface IQuestObjective : QuestNotifiable
     {      
         Boolean IsCompleted();
+
+        GameMessage CreateUpdateMessage();
     }
 
     public class MainQuestManager
@@ -141,7 +145,7 @@ namespace Mooege.Core.GS.Quests
 
             if (!_players.Contains(player))
             {
-                _players.Add(player);                                    
+                _players.Add(player);
                 UpdateAllQuests(player);
             }
         }
@@ -165,6 +169,11 @@ namespace Mooege.Core.GS.Quests
         public void UpdateQuestStatus(IQuest quest)
         {            
             GameMessage message = quest.CreateQuestUpdateMessage();
+            UpdatePlayers(message);
+        }
+
+        private void UpdatePlayers(GameMessage message)
+        {
             if (message != null)
             {
                 foreach (Player.Player player in _players)
@@ -173,6 +182,7 @@ namespace Mooege.Core.GS.Quests
                 }
             }
         }
+
 
         public void LoadQuests()
         {
@@ -253,6 +263,12 @@ namespace Mooege.Core.GS.Quests
             {
                 quest.OnEnterScene(scene);
             }
+        }
+
+
+        public void UpdateQuestStepObjective(IQuestObjective questObjectiv)
+        {            
+            UpdatePlayers(questObjectiv.CreateUpdateMessage());
         }
     }
 }

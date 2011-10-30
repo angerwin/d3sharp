@@ -102,8 +102,8 @@ namespace Mooege.Core.GS.Quests
             }
             else
             {
-                _isActive = true;                
-                AddQuestObjectives(GetQuestStepGoals());                
+                _isActive = true;
+                AddQuestObjectives(GetQuestStepGoals());
             }
 
             this._engine.UpdateQuestStatus(this);
@@ -117,6 +117,8 @@ namespace Mooege.Core.GS.Quests
             _objectiveList = new List<IQuestObjective>();
             foreach (QuestStepObjectiveSet objectivSet in objectiveSets)
             {
+
+                int taksIndex = 0;
                 foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
                 {
 
@@ -131,8 +133,9 @@ namespace Mooege.Core.GS.Quests
                     }
                     else
                     {
-                        _objectiveList.Add(new QuestObjectivImpl(_engine, objectiv));
+                        _objectiveList.Add(new QuestObjectivImpl(taksIndex , _engine, objectiv, GetQuestStep(), _questData));
                     }
+                    taksIndex++;
                 }
             }
             

@@ -30,13 +30,17 @@ namespace Mooege.Core.GS.Actors
             : base(world, actorSNO, position)
         {
             this.Attributes[GameAttribute.NPC_Has_Interact_Options, 0] = true;
+            this.Attributes[GameAttribute.NPC_Has_Interact_Options, 1] = true;
+            this.Attributes[GameAttribute.NPC_Has_Interact_Options, 2] = true;
+            this.Attributes[GameAttribute.NPC_Has_Interact_Options, 3] = true;
+            this.Attributes[GameAttribute.NPC_Has_Interact_Options, 4] = true;
             this.Attributes[GameAttribute.NPC_Is_Operatable] = true;
             this.Attributes[GameAttribute.Buff_Visual_Effect, 0x00FFFFF] = true;
         }
 
         public override void OnTargeted(Mooege.Core.GS.Player.Player player, TargetMessage message)
         {
-            throw new NotImplementedException();
+            StartConversation(player);
         }
     }
 }

@@ -19,6 +19,7 @@
 using Mooege.Core.GS.Common.Types.Math;
 using Mooege.Core.GS.Map;
 using Mooege.Net.GS.Message;
+using Mooege.Net.GS.Message.Definitions.World;
 
 namespace Mooege.Core.GS.Actors
 {

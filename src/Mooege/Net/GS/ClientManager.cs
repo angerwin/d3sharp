@@ -132,20 +132,23 @@ namespace Mooege.Net.GS
 
                 game.Enter(client.Player);
 
-                NPC leah = new NPC(game.StartWorld, 4580, new Vector3D { 
+                Actor leah = new InteractiveNPC(game.StartWorld, 4580, new Vector3D
+                { 
                     X = client.Player.Position.X - 10,
                     Y = client.Player.Position.Y,
                     Z = client.Player.Position.Z,
 
                 });
+                game.StartWorld.Enter(leah);
 
-                NPC rumfort = new NPC(game.StartWorld, 3739, new Vector3D
+                Actor rumfort = new InteractiveNPC(game.StartWorld, 3739, new Vector3D
                 {
                     X = client.Player.Position.X - 20,
                     Y = client.Player.Position.Y,
                     Z = client.Player.Position.Z,
 
                 });
+                game.StartWorld.Enter(rumfort);
             }
         }    
     }

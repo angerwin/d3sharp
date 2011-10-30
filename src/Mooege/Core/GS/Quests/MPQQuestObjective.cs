@@ -9,6 +9,8 @@ using System.Diagnostics;
 using Mooege.Common;
 using Mooege.Core.GS.Common.Types.SNO;
 using Mooege.Core.GS.Common.Types.Math;
+using Mooege.Net.GS.Message.Definitions.Quest;
+using Mooege.Net.GS.Message;
 
 namespace Mooege.Core.GS.Quests
 {
@@ -20,14 +22,20 @@ namespace Mooege.Core.GS.Quests
 
 
         private QuestStepObjective _objectivData;
+        private QuestStep _questStepData;
+        private Quest _questData;
         private Boolean _completed;
         private QuestEngine _engine;
+        private int _taskIndex;
 
-        public QuestObjectivImpl(QuestEngine engine, QuestStepObjective objectivData)
+        public QuestObjectivImpl(int taskIndex, QuestEngine engine, QuestStepObjective objectivData, QuestStep questStepData, Quest questData)
         {
             this._objectivData = objectivData;
             this._completed = false;
             this._engine = engine;
+            _questStepData = questStepData;
+            _questData = questData;
+            _taskIndex = taskIndex;
         }
 
         public Boolean IsCompleted()
@@ -35,6 +43,25 @@ namespace Mooege.Core.GS.Quests
             return _completed;
         }
 
+        public GameMessage CreateUpdateMessage()
+        {
+
+            if (_questStepData != null)
+            {
+                QuestCounterMessage message = new QuestCounterMessage
+                {
+                    snoQuest = 87700,
+                    StepID = 0,
+                    TaskIndex = _taskIndex,
+                    Counter = 1,
+                    snoLevelArea = MPQStorage.Data.Assets[SNOGroup.LevelArea].Keys.First(),
+                    Checked = 0,
+                };
+                return message;
+            }
+
+            return null;
+        }
         public void OnDeath(Actors.Actor actor)
         {
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.KillGroup)
@@ -46,7 +73,8 @@ namespace Mooege.Core.GS.Quests
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.KillMonster)
             {
                 if (actor.ActorSNO == _objectivData.SNOName1.SNOId)
-                {
+                {                   
+                    _engine.UpdateQuestStepObjective(this);
                     _completed = true;
                     return;
                 }
