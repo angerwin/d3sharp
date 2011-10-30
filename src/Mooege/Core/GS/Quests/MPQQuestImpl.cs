@@ -76,12 +76,7 @@ namespace Mooege.Core.GS.Quests
         public int SNOId()
         {
             return _questData.Header.SNOId;
-        }
-
-        public void SendQuestInformation(GameClient client)
-        {
-            throw new NotImplementedException();
-        }
+        }        
 
         public void Start(QuestEngine engine)
         {
@@ -107,8 +102,6 @@ namespace Mooege.Core.GS.Quests
             }
 
             this._engine.UpdateQuestStatus(this);
-
-           
         }
 
 
@@ -117,8 +110,6 @@ namespace Mooege.Core.GS.Quests
             _objectiveList = new List<IQuestObjective>();
             foreach (QuestStepObjectiveSet objectivSet in objectiveSets)
             {
-
-                int taksIndex = 0;
                 foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
                 {
 
@@ -133,111 +124,28 @@ namespace Mooege.Core.GS.Quests
                     }
                     else
                     {
-                        _objectiveList.Add(new QuestObjectivImpl(taksIndex , _engine, objectiv, GetQuestStep(), _questData));
+                        IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this);
+                        _objectiveList.Add(questObjective);
+                        _engine.Register(questObjective);
                     }
-                    taksIndex++;
                 }
             }
-            
         }
 
         private List<IQuestObjective> ActiveObjectives
         {
             get { return (List<IQuestObjective>)_objectiveList.Where(objectiv => !objectiv.IsCompleted()).ToList(); }
         }
-
-        public void OnDeath(Actors.Actor actor)
-        {
-            foreach (IQuestObjective objectiv in ActiveObjectives)
-            {
-                objectiv.OnDeath(actor);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-        public void OnPositionUpdate(Vector3D position)
-        {
-            foreach (IQuestObjective objectiv in ActiveObjectives)
-            {
-                objectiv.OnPositionUpdate(position);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-        public void OnEnterWorld(Map.World world)
-        {
-            foreach (IQuestObjective objectiv in ActiveObjectives)
-            {
-                objectiv.OnEnterWorld(world);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-        public void OnInteraction(Player.Player player, Actors.Actor actor)
-        {
-            foreach (IQuestObjective objectiv in ActiveObjectives)
-            {
-                objectiv.OnInteraction(player, actor);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
+      
         public void Cancel()
         {
             throw new NotImplementedException();
         }
 
-
-        public void OnEvent(int eventSNOId)
+        public void ObjectiveComplete(IQuestObjective objective)
         {
-            foreach (IQuestObjective objectiv in ActiveObjectives)
-            {
-                objectiv.OnEvent(eventSNOId);
-            }
 
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-
-        public void OnQuestCompleted(int questSNOId)
-        {
-            foreach (IQuestObjective objectiv in ActiveObjectives)
-            {
-                objectiv.OnQuestCompleted(questSNOId);
-            }
-
-            if (ActiveObjectives.Count == 0)
-            {
-                NextQuestStep();
-            }
-        }
-
-
-        public void OnEnterScene(Map.Scene scene)
-        {
-            foreach (IQuestObjective objectiv in ActiveObjectives)
-            {
-                objectiv.OnEnterScene(scene);
-            }
+            _engine.Unregister(objective);
 
             if (ActiveObjectives.Count == 0)
             {
@@ -245,5 +153,4 @@ namespace Mooege.Core.GS.Quests
             }
         }
     }
-
 }

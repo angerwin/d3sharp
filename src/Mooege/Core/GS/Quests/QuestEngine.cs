@@ -22,9 +22,7 @@ namespace Mooege.Core.GS.Quests
 
     public interface QuestNotifiable
     {
-        void OnDeath(Mooege.Core.GS.Actors.Actor actor);
-
-        void OnPositionUpdate(Vector3D position);
+        void OnDeath(Mooege.Core.GS.Actors.Actor actor);        
 
         void OnEnterWorld(Mooege.Core.GS.Map.World world);
 
@@ -41,25 +39,25 @@ namespace Mooege.Core.GS.Quests
     {
         void UpdateQuestStatus(IQuest quest);        
 
-        void InitiateConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
+        void TriggerConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
 
         void AddPlayer(Player.Player joinedPlayer);
 
         void AddQuest(IQuest quest);
 
-        void UpdateQuestStepObjective(IQuestObjective questObjectivImpl);
+        void Register(IQuestObjective objective);
+
+        void Unregister(IQuestObjective objective);
     }
 
-    public interface IQuest : QuestNotifiable
+    public interface IQuest
     {
         Boolean IsActive();
 
         Boolean IsFailed();
 
         Boolean IsCompleted();
-
-        void SendQuestInformation(GameClient client);
-
+        
         void Start(QuestEngine engine);
         
         void Cancel();
@@ -69,6 +67,8 @@ namespace Mooege.Core.GS.Quests
         int SNOId();
 
         List<QuestCompletionStep> GetCompletionSteps();
+
+        void ObjectiveComplete(IQuestObjective questObjectivImpl);
     }
 
     public interface IQuestObjective : QuestNotifiable
@@ -76,6 +76,8 @@ namespace Mooege.Core.GS.Quests
         Boolean IsCompleted();
 
         GameMessage CreateUpdateMessage();
+
+        QuestStepObjectiveType GetQuestObjectiveType();
     }
 
     public class MainQuestManager
@@ -102,12 +104,10 @@ namespace Mooege.Core.GS.Quests
 
         public void LoadNextMainQuest()
         {
-
             _questListEnumerator.MoveNext();
             Quest questData = (Quest)(MPQStorage.Data.Assets[SNOGroup.Quest][_questListEnumerator.Current].Data);
             activeMainQuest = new MPQQuest(questData);
-            _engine.AddQuest(activeMainQuest);
-            
+            _engine.AddQuest(activeMainQuest);            
         }
 
 
@@ -131,13 +131,55 @@ namespace Mooege.Core.GS.Quests
         private Game.Game _game;
         private MainQuestManager _mainQuestManager;
 
+        private Dictionary<QuestStepObjectiveType, List<IQuestObjective>> _activeObjectives;
+
         public PlayerQuestEngine(Game.Game game)
         {
             this._players = new List<Player.Player>();
             _questList = new List<IQuest>();
+            _activeObjectives = new Dictionary<QuestStepObjectiveType, List<IQuestObjective>>();            
             _game = game;
             _mainQuestManager = new MainQuestManager(this);
             LoadQuests();     
+        }
+
+        public void Register(IQuestObjective objective)
+        {
+            QuestStepObjectiveType type = objective.GetQuestObjectiveType();
+
+            List<IQuestObjective> objectiveList;
+            if (_activeObjectives.ContainsKey(type))
+            {
+                objectiveList = _activeObjectives[type];
+            }
+            else
+            {
+                objectiveList = new List<IQuestObjective>();
+                _activeObjectives.Add(type, objectiveList);
+            }
+
+            objectiveList.Add(objective);
+        }
+
+        public void Unregister(IQuestObjective objective)
+        {
+            QuestStepObjectiveType type = objective.GetQuestObjectiveType();
+
+            List<IQuestObjective> objectiveList;
+            if (_activeObjectives.ContainsKey(type))
+            {
+                objectiveList = _activeObjectives[type];
+            }
+            else
+            {
+                objectiveList = new List<IQuestObjective>();
+                _activeObjectives.Add(type, objectiveList);
+            }
+
+            if (objectiveList.Contains(objective))
+            {
+                objectiveList.Remove(objective);
+            }
         }
 
         public void AddPlayer(Player.Player player)
@@ -198,60 +240,76 @@ namespace Mooege.Core.GS.Quests
         private List<IQuest> ActiveQuests
         {
             get { return _questList.Where(quest => quest.IsCompleted() == false && quest.IsFailed() == false).ToList(); }
-        }        
+        }
+
+        public void TriggerConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor)
+        {
+            // TODO: Trigger Converstation in an correct way
+            player.PlayHeroConversation(conversation.Header.SNOId, 0);
+        }
+
+        private List<IQuestObjective> GetObjectiveList(QuestStepObjectiveType type)
+        {
+            List<IQuestObjective> objectivesList = new List<IQuestObjective>();
+
+            if (_activeObjectives.ContainsKey(type) &&
+                _activeObjectives[type].Count > 0)
+            {
+                objectivesList.AddRange(_activeObjectives[type]);                
+            }
+
+            return objectivesList;
+        }
 
         public void OnDeath(Actors.Actor actor)
         {
-            foreach (IQuest quest in ActiveQuests)
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.KillMonster))
             {
-                quest.OnDeath(actor);
+                objective.OnDeath(actor);
             }
-        }
-
-        public void OnPositionUpdate(Vector3D position)
-        {
-            foreach (IQuest quest in ActiveQuests)
+            
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.KillGroup))
             {
-                quest.OnPositionUpdate(position);
-            }
-        }
+                objective.OnDeath(actor);
+            }        
+        }      
 
         public void OnEnterWorld(Map.World world)
         {
-            foreach (IQuest quest in ActiveQuests)
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.EnterWorld))
             {
-                quest.OnEnterWorld(world);
-            }
+                objective.OnEnterWorld(world);
+            }            
         }
 
         public void OnInteraction(Player.Player player, Actors.Actor actor)
         {
-            foreach (IQuest quest in ActiveQuests)
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.HadConversation))
             {
-                quest.OnInteraction(player, actor);
+                objective.OnInteraction(player, actor);
             }
+
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.InteractWithActor))
+            {
+                objective.OnInteraction(player, actor);
+            }           
         }
 
-        public void InitiateConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor)
-        {
-            // TODO: Dummy implementation
-            player.PlayHeroConversation(conversation.Header.SNOId, 0);
-        }
-
+        
 
         public void OnEvent(int eventSNOId)
-        {
-            foreach (IQuest quest in ActiveQuests)
+        {           
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.EventReceived))
             {
-                quest.OnEvent(eventSNOId);
-            }
+                objective.OnEvent(eventSNOId);
+            } 
         }
 
         public void OnQuestCompleted(int questSNOId)
         {
-            foreach (IQuest quest in ActiveQuests)
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.CompleteQuest))
             {
-                quest.OnQuestCompleted(questSNOId);
+                objective.OnQuestCompleted(questSNOId);
             }
             _mainQuestManager.OnQuestCompleted(questSNOId);
         }
@@ -259,16 +317,10 @@ namespace Mooege.Core.GS.Quests
 
         public void OnEnterScene(Map.Scene scene)
         {
-            foreach (IQuest quest in ActiveQuests)
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.EnterScene))
             {
-                quest.OnEnterScene(scene);
+                objective.OnEnterScene(scene);
             }
-        }
-
-
-        public void UpdateQuestStepObjective(IQuestObjective questObjectiv)
-        {            
-            UpdatePlayers(questObjectiv.CreateUpdateMessage());
         }
     }
 }
