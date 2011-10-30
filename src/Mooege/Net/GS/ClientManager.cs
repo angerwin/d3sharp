@@ -132,6 +132,9 @@ namespace Mooege.Net.GS
 
                 game.Enter(client.Player);
 
+                // TODO: remove me when actors are loaded correctly
+                #region quest NPCs
+
                 Actor leah = new InteractiveNPC(game.StartWorld, 4580, new Vector3D
                 { 
                     X = client.Player.Position.X - 10,
@@ -149,6 +152,21 @@ namespace Mooege.Net.GS
 
                 });
                 game.StartWorld.Enter(rumfort);
+
+
+                /*
+                Actor leah2 = new InteractiveNPC(game.StartWorld, 4580, new Vector3D
+                {
+                    X = 1954.20447f,
+                    Y = 2770.90942f,
+                    Z = 40.24713f,
+
+                });
+                //game.StartWorld.Enter(leah2);
+                */
+
+                #endregion
+
             }
         }    
     }

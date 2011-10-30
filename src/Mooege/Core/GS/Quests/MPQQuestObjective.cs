@@ -78,7 +78,14 @@ namespace Mooege.Core.GS.Quests
 
         public void OnEnterWorld(Map.World world)
         {
-
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.EnterWorld)
+            {
+                if (_objectivData.SNOName1.SNOId == world.WorldSNO)
+                {
+                    Complete();
+                    return;
+                }
+            }
         }
 
         public void OnInteraction(Player.Player player, Actors.Actor actor)
@@ -113,13 +120,13 @@ namespace Mooege.Core.GS.Quests
         }
 
 
-        public void OnEvent(int eventSNOId)
+        public void OnEvent(String eventName)
         {
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.EventReceived)
             {
-                if (_objectivData.SNOName1.SNOId == eventSNOId)
+                if (_objectivData.Unknown1 == eventName)
                 {
-                   Complete();
+                    Complete();
                     return;
                 }
             }

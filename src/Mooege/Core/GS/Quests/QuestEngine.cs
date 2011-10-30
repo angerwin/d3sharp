@@ -28,7 +28,7 @@ namespace Mooege.Core.GS.Quests
 
         void OnInteraction(Player.Player player, Mooege.Core.GS.Actors.Actor actor);
 
-        void OnEvent(int eventSNOId);
+        void OnEvent(String eventName);
 
         void OnQuestCompleted(int questSNOId);
 
@@ -38,9 +38,7 @@ namespace Mooege.Core.GS.Quests
     public interface QuestEngine : QuestNotifiable
     {
         void UpdateQuestStatus(IQuest quest);        
-
-        void TriggerConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
-
+        
         void AddPlayer(Player.Player joinedPlayer);
 
         void AddQuest(IQuest quest);
@@ -48,6 +46,10 @@ namespace Mooege.Core.GS.Quests
         void Register(IQuestObjective objective);
 
         void Unregister(IQuestObjective objective);
+
+        void TriggerConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
+
+        void TriggerQuestEvent(String eventName);
     }
 
     public interface IQuest
@@ -297,13 +299,13 @@ namespace Mooege.Core.GS.Quests
             }           
         }
 
-        
 
-        public void OnEvent(int eventSNOId)
+
+        public void OnEvent(String eventName)
         {           
             foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.EventReceived))
             {
-                objective.OnEvent(eventSNOId);
+                objective.OnEvent(eventName);
             } 
         }
 
@@ -323,6 +325,12 @@ namespace Mooege.Core.GS.Quests
             {
                 objective.OnEnterScene(scene);
             }
+        }
+
+
+        public void TriggerQuestEvent(String eventName)
+        {
+            _game.EventManager.StartEvent(eventName);
         }
     }
 }

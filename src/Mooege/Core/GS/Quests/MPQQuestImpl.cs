@@ -120,8 +120,7 @@ namespace Mooege.Core.GS.Quests
                     _objectiveList.Add(questObjective);
                     _engine.Register(questObjective);
 
-                    if (objectiv.ObjectiveType == QuestStepObjectiveType.EventReceived
-                        || objectiv.ObjectiveType == QuestStepObjectiveType.EnterLevelArea                      
+                    if (objectiv.ObjectiveType == QuestStepObjectiveType.EnterLevelArea                      
                         || objectiv.ObjectiveType == QuestStepObjectiveType.EnterTrigger                        
                         || objectiv.ObjectiveType == QuestStepObjectiveType.GameFlagSet
                         || objectiv.ObjectiveType == QuestStepObjectiveType.PlayerFlagSet
@@ -131,6 +130,17 @@ namespace Mooege.Core.GS.Quests
                         Logger.Warn("Quest Objective is ignored!!! Type: {0} id: {1}", objectiv.ObjectiveType, objectiv.I0);
                         Logger.Warn(objectiv.ToString());
                         questObjective.Cancel();                        
+                    }
+
+                    // TODO: find an better way to Trigger an Event than observing the QuestStepObjectives...
+                    if(objectiv.ObjectiveType == QuestStepObjectiveType.EventReceived)
+                    {
+                        _engine.TriggerQuestEvent(objectiv.Unknown1);
+                    }
+
+                    if (objectiv.ObjectiveType == QuestStepObjectiveType.KillGroup)
+                    {
+                        _engine.TriggerQuestEvent(objectiv.Unknown1);
                     }
                   
                 }

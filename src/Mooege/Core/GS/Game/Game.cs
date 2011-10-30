@@ -83,7 +83,7 @@ namespace Mooege.Core.GS.Game
 
             // TODO: multiplayer 
             QuestEngine = new PlayerQuestEngine(this);
-            EventManager = new EventManager(this);           
+            EventManager = new DummyEventManager(this);           
         }
 
         public void Update() // the main game-loop.
