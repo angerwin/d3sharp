@@ -11,6 +11,7 @@ using Mooege.Core.GS.Common.Types.SNO;
 using Mooege.Core.GS.Common.Types.Math;
 using Mooege.Net.GS.Message.Definitions.Quest;
 using Mooege.Net.GS.Message;
+using Mooege.Core.GS.Players;
 
 namespace Mooege.Core.GS.Quests
 {
@@ -63,7 +64,7 @@ namespace Mooege.Core.GS.Quests
 
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.KillMonster)
             {
-                if (actor.ActorSNO == _objectivData.SNOName1.SNOId)
+                if (actor.SNOId == _objectivData.SNOName1.SNOId)
                 {
                     Complete();                    
                     return;
@@ -80,7 +81,7 @@ namespace Mooege.Core.GS.Quests
         {
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.EnterWorld)
             {
-                if (_objectivData.SNOName1.SNOId == world.WorldSNO)
+                if (_objectivData.SNOName1.SNOId == world.SNOId)
                 {
                     Complete();
                     return;
@@ -88,14 +89,14 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-        public void OnInteraction(Player.Player player, Actors.Actor actor)
+        public void OnInteraction(Player player, Actors.Actor actor)
         {
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.HadConversation)
             {                
                 if(MPQStorage.Data.Assets[SNOGroup.Conversation].ContainsKey(_objectivData.SNOName1.SNOId))
                 {
                     Conversation conversation = (Conversation)MPQStorage.Data.Assets[SNOGroup.Conversation][_objectivData.SNOName1.SNOId].Data;
-                    if (conversation.SNOPrimaryNpc == actor.ActorSNO)
+                    if (conversation.SNOPrimaryNpc == actor.SNOId)
                     {
                         _engine.TriggerConversation(player, conversation, actor);
                         Complete();
@@ -110,7 +111,7 @@ namespace Mooege.Core.GS.Quests
 
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.InteractWithActor)
             {
-                if (_objectivData.SNOName1.SNOId == actor.ActorSNO)
+                if (_objectivData.SNOName1.SNOId == actor.SNOId)
                 {
                    Complete();
                     return;
@@ -150,7 +151,7 @@ namespace Mooege.Core.GS.Quests
         {
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.EnterScene)
             {
-                if (_objectivData.SNOName1.SNOId == scene.SceneSNO)
+                if (_objectivData.SNOName1.SNOId == scene.SNOId)
                 {
                     Complete();
                     return;

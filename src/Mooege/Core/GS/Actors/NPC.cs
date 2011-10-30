@@ -16,19 +16,22 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+using System.Collections.Generic;
+using Mooege.Common.MPQ.FileFormats.Types;
 using Mooege.Core.GS.Common.Types.Math;
 using Mooege.Core.GS.Map;
 using Mooege.Net.GS.Message;
 using Mooege.Net.GS.Message.Definitions.World;
+using Mooege.Core.GS.Players;
 
 namespace Mooege.Core.GS.Actors
 {
     public class NPC : Living
     {
-        public override ActorType ActorType { get { return ActorType.NPC; } }
+        public override ActorType ActorType { get { return ActorType.Monster; } }
 
-        public NPC(World world, int actorSNO, Vector3D position)
-            : base(world, actorSNO, position)
+        public NPC(World world, int actorSNO, Vector3D position, Dictionary<int, TagMapEntry> tags)
+            : base(world, actorSNO, position, tags)
         {
             this.Field2 = 0x9;
             this.Field7 = 1;
@@ -37,7 +40,7 @@ namespace Mooege.Core.GS.Actors
             this.Attributes[GameAttribute.Is_NPC] = true;
         }
 
-		public override void OnTargeted(Mooege.Core.GS.Player.Player player, TargetMessage message)
+		public override void OnTargeted(Player player, TargetMessage message)
         {
             StartConversation(player);
         }

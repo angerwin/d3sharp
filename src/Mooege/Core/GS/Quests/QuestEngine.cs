@@ -16,6 +16,8 @@ using Mooege.Net.GS.Message.Definitions.Conversation;
 using Mooege.Common.Helpers;
 using Mooege.Core.GS.Common.Types.Math;
 using Mooege.Core.GS.Common.Types.SNO;
+using Mooege.Core.GS.Players;
+using Mooege.Core.GS.Games;
 
 namespace Mooege.Core.GS.Quests
 {
@@ -26,7 +28,7 @@ namespace Mooege.Core.GS.Quests
 
         void OnEnterWorld(Mooege.Core.GS.Map.World world);
 
-        void OnInteraction(Player.Player player, Mooege.Core.GS.Actors.Actor actor);
+        void OnInteraction(Player player, Mooege.Core.GS.Actors.Actor actor);
 
         void OnEvent(String eventName);
 
@@ -39,7 +41,7 @@ namespace Mooege.Core.GS.Quests
     {
         void UpdateQuestStatus(IQuest quest);        
         
-        void AddPlayer(Player.Player joinedPlayer);
+        void AddPlayer(Player joinedPlayer);
 
         void AddQuest(IQuest quest);
 
@@ -47,7 +49,7 @@ namespace Mooege.Core.GS.Quests
 
         void Unregister(IQuestObjective objective);
 
-        void TriggerConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
+        void TriggerConversation(Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
 
         void TriggerQuestEvent(String eventName);
     }
@@ -131,15 +133,15 @@ namespace Mooege.Core.GS.Quests
         private static readonly Logger Logger = LogManager.CreateLogger();
         
         private List<IQuest> _questList;
-        private List<Player.Player> _players;
-        private Game.Game _game;
+        private List<Player> _players;
+        private Game _game;
         private MainQuestManager _mainQuestManager;
 
         private Dictionary<QuestStepObjectiveType, List<IQuestObjective>> _activeObjectives;
 
-        public PlayerQuestEngine(Game.Game game)
+        public PlayerQuestEngine(Game game)
         {
-            this._players = new List<Player.Player>();
+            this._players = new List<Player>();
             _questList = new List<IQuest>();
             _activeObjectives = new Dictionary<QuestStepObjectiveType, List<IQuestObjective>>();            
             _game = game;
@@ -186,7 +188,7 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-        public void AddPlayer(Player.Player player)
+        public void AddPlayer(Player player)
         {
 
             if (!_players.Contains(player))
@@ -196,14 +198,14 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-        public void RemovePlayer(Player.Player player)
+        public void RemovePlayer(Player player)
         {
             if(_players.Contains(player)){
                 _players.Remove(player);
             }
         }
 
-        public void UpdateAllQuests(Player.Player player)
+        public void UpdateAllQuests(Player player)
         {
             foreach (IQuest quest in ActiveQuests)
             {
@@ -222,7 +224,7 @@ namespace Mooege.Core.GS.Quests
         {
             if (message != null)
             {
-                foreach (Player.Player player in _players)
+                foreach (Player player in _players)
                 {
                     player.InGameClient.SendMessage(message, true);
                 }
@@ -246,7 +248,7 @@ namespace Mooege.Core.GS.Quests
             get { return _questList.Where(quest => quest.IsCompleted() == false && quest.IsFailed() == false).ToList(); }
         }
 
-        public void TriggerConversation(Player.Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor)
+        public void TriggerConversation(Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor)
         {
             // TODO: Trigger Converstation in an correct way
             player.PlayHeroConversation(conversation.Header.SNOId, 0);
@@ -286,7 +288,7 @@ namespace Mooege.Core.GS.Quests
             }            
         }
 
-        public void OnInteraction(Player.Player player, Actors.Actor actor)
+        public void OnInteraction(Player player, Actors.Actor actor)
         {
             foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.HadConversation))
             {
