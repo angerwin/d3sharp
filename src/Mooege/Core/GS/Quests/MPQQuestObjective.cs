@@ -150,6 +150,12 @@ namespace Mooege.Core.GS.Quests
                 }
             }
         }
+
+
+        public void Cancel()
+        {
+            Complete();
+        }
     }
    
 

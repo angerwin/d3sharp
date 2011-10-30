@@ -78,6 +78,8 @@ namespace Mooege.Core.GS.Quests
         GameMessage CreateUpdateMessage();
 
         QuestStepObjectiveType GetQuestObjectiveType();
+
+        void Cancel();
     }
 
     public class MainQuestManager

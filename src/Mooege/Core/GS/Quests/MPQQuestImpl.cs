@@ -8,11 +8,14 @@ using Mooege.Net.GS.Message.Definitions.Quest;
 using Mooege.Net.GS;
 using Mooege.Net.GS.Message.Fields;
 using Mooege.Core.GS.Common.Types.Math;
+using Mooege.Common;
 
 namespace Mooege.Core.GS.Quests
 {
     public class MPQQuest : IQuest
     {
+
+        private static readonly Logger Logger = LogManager.CreateLogger();        
 
         private Quest _questData;
         private List<QuestStep>.Enumerator _stepEnumerator;
@@ -113,6 +116,10 @@ namespace Mooege.Core.GS.Quests
                 foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
                 {
 
+                    IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this);
+                    _objectiveList.Add(questObjective);
+                    _engine.Register(questObjective);
+
                     if (objectiv.ObjectiveType == QuestStepObjectiveType.EventReceived
                         || objectiv.ObjectiveType == QuestStepObjectiveType.EnterLevelArea                      
                         || objectiv.ObjectiveType == QuestStepObjectiveType.EnterTrigger                        
@@ -121,13 +128,11 @@ namespace Mooege.Core.GS.Quests
                         || objectiv.ObjectiveType == QuestStepObjectiveType.TimedEventExpired)
                     {
                         // ObjectiveType cannot handled at the moment - just ignore this objective
+                        Logger.Warn("Quest Objective is ignored!!! Type: {0} id: {1}", objectiv.ObjectiveType, objectiv.I0);
+                        Logger.Warn(objectiv.ToString());
+                        questObjective.Cancel();                        
                     }
-                    else
-                    {
-                        IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this);
-                        _objectiveList.Add(questObjective);
-                        _engine.Register(questObjective);
-                    }
+                  
                 }
             }
         }
@@ -144,9 +149,7 @@ namespace Mooege.Core.GS.Quests
 
         public void ObjectiveComplete(IQuestObjective objective)
         {
-
             _engine.Unregister(objective);
-
             if (ActiveObjectives.Count == 0)
             {
                 NextQuestStep();
