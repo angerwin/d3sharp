@@ -35,6 +35,8 @@ namespace Mooege.Core.GS.Quests
         void OnQuestCompleted(int questSNOId);
 
         void OnEnterScene(Map.Scene scene);
+
+        void OnGroupDeath(string _mobGroupName);
     }
 
     public interface QuestEngine : QuestNotifiable
@@ -52,6 +54,8 @@ namespace Mooege.Core.GS.Quests
         void TriggerConversation(Player player, Conversation conversation, Mooege.Core.GS.Actors.Actor actor);
 
         void TriggerQuestEvent(String eventName);
+
+        void TriggerMobSpawn(int SNOId, int amount);
     }
 
     public interface IQuest
@@ -272,12 +276,7 @@ namespace Mooege.Core.GS.Quests
             foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.KillMonster))
             {
                 objective.OnDeath(actor);
-            }
-            
-            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.KillGroup))
-            {
-                objective.OnDeath(actor);
-            }        
+            }                             
         }      
 
         public void OnEnterWorld(Map.World world)
@@ -300,8 +299,6 @@ namespace Mooege.Core.GS.Quests
                 objective.OnInteraction(player, actor);
             }           
         }
-
-
 
         public void OnEvent(String eventName)
         {           
@@ -333,6 +330,21 @@ namespace Mooege.Core.GS.Quests
         public void TriggerQuestEvent(String eventName)
         {
             _game.EventManager.StartEvent(eventName);
+        }
+
+
+        public void OnGroupDeath(string _mobGroupName)
+        {
+            foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.KillGroup))
+            {
+                objective.OnGroupDeath(_mobGroupName);
+            }  
+        }
+
+        // This Method is just for testiong purpose
+        public void TriggerMobSpawn(int SNOId, int amount)
+        {            
+            _game.EventManager.SpawnMob(_game.Players.First().Value, SNOId, amount);
         }
     }
 }

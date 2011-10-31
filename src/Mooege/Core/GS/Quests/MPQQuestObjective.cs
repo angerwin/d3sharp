@@ -55,13 +55,7 @@ namespace Mooege.Core.GS.Quests
         }
 
         public void OnDeath(Actors.Actor actor)
-        {
-            if (_objectivData.ObjectiveType == QuestStepObjectiveType.KillGroup)
-            {
-                Complete();
-                return;
-            }
-
+        {           
             if (_objectivData.ObjectiveType == QuestStepObjectiveType.KillMonster)
             {
                 if (actor.SNOId == _objectivData.SNOName1.SNOId)
@@ -163,6 +157,19 @@ namespace Mooege.Core.GS.Quests
         public void Cancel()
         {
             Complete();
+        }
+
+
+        public void OnGroupDeath(string _mobGroupName)
+        {
+            if (_objectivData.ObjectiveType == QuestStepObjectiveType.KillGroup)
+            {
+                if (_objectivData.Unknown1.Equals(_mobGroupName))
+                {
+                    Complete();
+                    return;
+                }
+            }
         }
     }
    

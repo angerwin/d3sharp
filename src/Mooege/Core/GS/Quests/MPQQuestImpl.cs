@@ -9,6 +9,7 @@ using Mooege.Net.GS;
 using Mooege.Net.GS.Message.Fields;
 using Mooege.Core.GS.Common.Types.Math;
 using Mooege.Common;
+using Mooege.Core.GS.Games;
 
 namespace Mooege.Core.GS.Quests
 {
@@ -19,6 +20,7 @@ namespace Mooege.Core.GS.Quests
 
         private Quest _questData;
         private List<QuestStep>.Enumerator _stepEnumerator;
+        private List<QuestStepObjectiveSet>.Enumerator _stepObjectiveSetEnumerator;
         private List<IQuestObjective> _objectiveList;
 
         private Boolean _isFailed = false;
@@ -105,45 +107,66 @@ namespace Mooege.Core.GS.Quests
             }
 
             this._engine.UpdateQuestStatus(this);
-        }
-
-
+        }       
+        
         private void AddQuestObjectives(List<QuestStepObjectiveSet> objectiveSets)
         {
-            _objectiveList = new List<IQuestObjective>();
-            foreach (QuestStepObjectiveSet objectivSet in objectiveSets)
+            _stepObjectiveSetEnumerator = objectiveSets.GetEnumerator();
+            NextObjectiveSet();
+        }
+
+        private void NextObjectiveSet()
+        {
+            _stepObjectiveSetEnumerator.MoveNext();
+            if (_stepObjectiveSetEnumerator.Current != null)
             {
-                foreach (QuestStepObjective objectiv in objectivSet.StepObjectives)
+                AddQuestObjectives(_stepObjectiveSetEnumerator.Current.StepObjectives);
+            }
+            else
+            {
+                NextQuestStep();
+            }
+        }
+
+        private void AddQuestObjectives(List<QuestStepObjective> objectiveList)
+        {
+            _objectiveList = new List<IQuestObjective>();
+            foreach (QuestStepObjective objectiv in objectiveList)
+            {
+
+                IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this);
+                _objectiveList.Add(questObjective);
+                _engine.Register(questObjective);
+
+                if (objectiv.ObjectiveType == QuestStepObjectiveType.EnterLevelArea
+                    || objectiv.ObjectiveType == QuestStepObjectiveType.EnterTrigger
+                    || objectiv.ObjectiveType == QuestStepObjectiveType.GameFlagSet
+                    || objectiv.ObjectiveType == QuestStepObjectiveType.PlayerFlagSet
+                    || objectiv.ObjectiveType == QuestStepObjectiveType.TimedEventExpired)
                 {
-
-                    IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this);
-                    _objectiveList.Add(questObjective);
-                    _engine.Register(questObjective);
-
-                    if (objectiv.ObjectiveType == QuestStepObjectiveType.EnterLevelArea                      
-                        || objectiv.ObjectiveType == QuestStepObjectiveType.EnterTrigger                        
-                        || objectiv.ObjectiveType == QuestStepObjectiveType.GameFlagSet
-                        || objectiv.ObjectiveType == QuestStepObjectiveType.PlayerFlagSet
-                        || objectiv.ObjectiveType == QuestStepObjectiveType.TimedEventExpired)
-                    {
-                        // ObjectiveType cannot handled at the moment - just ignore this objective
-                        Logger.Warn("Quest Objective is ignored!!! Type: {0} id: {1}", objectiv.ObjectiveType, objectiv.I0);
-                        Logger.Warn(objectiv.ToString());
-                        questObjective.Cancel();                        
-                    }
-
-                    // TODO: find an better way to Trigger an Event than observing the QuestStepObjectives...
-                    if(objectiv.ObjectiveType == QuestStepObjectiveType.EventReceived)
-                    {
-                        _engine.TriggerQuestEvent(objectiv.Unknown1);
-                    }
-
-                    if (objectiv.ObjectiveType == QuestStepObjectiveType.KillGroup)
-                    {
-                        _engine.TriggerQuestEvent(objectiv.Unknown1);
-                    }
-                  
+                    // ObjectiveType cannot handled at the moment - just ignore this objective
+                    Logger.Warn("Quest Objective is ignored!!! Type: {0} id: {1}", objectiv.ObjectiveType, objectiv.I0);
+                    Logger.Warn(objectiv.ToString());
+                    questObjective.Cancel();
                 }
+
+                // TODO: find an better way to Trigger an Event than observing the QuestStepObjectives...
+                if (objectiv.ObjectiveType == QuestStepObjectiveType.EventReceived)
+                {
+                    _engine.TriggerQuestEvent(objectiv.Unknown1);
+                }
+
+                if (objectiv.ObjectiveType == QuestStepObjectiveType.KillGroup)
+                {
+                    _engine.TriggerQuestEvent(objectiv.Unknown1);
+                }
+
+                if (objectiv.ObjectiveType == QuestStepObjectiveType.KillMonster)
+                {
+                    // FIXME: trigger Mob Spawn
+                    _engine.TriggerMobSpawn(objectiv.SNOName1.SNOId, 1);
+                }
+
             }
         }
 
@@ -162,7 +185,7 @@ namespace Mooege.Core.GS.Quests
             _engine.Unregister(objective);
             if (ActiveObjectives.Count == 0)
             {
-                NextQuestStep();
+                NextObjectiveSet();
             }
         }
     }

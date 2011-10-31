@@ -25,13 +25,16 @@ using Mooege.Core.GS.Map;
 using Mooege.Core.GS.Players;
 using Mooege.Net.GS.Message;
 using Mooege.Net.GS.Message.Definitions.Animation;
+using Mooege.Core.GS.Events;
+using Mooege.Core.GS.Games;
 
 namespace Mooege.Core.GS.Actors
 {
-    public class Living : Actor
+    public class Living : Actor, IObservable<Actor>
     {
         public override ActorType ActorType { get { return ActorType.Monster; } }
-
+        private Game _game;
+        private List<IObserver<Actor>> _observers;
         // TODO: Setter needs to update world. Also, this is probably an ACD field. /komiga
         // TODO: not only Living have animations, put this in Actor? /fasbat
         public int AnimationSNO { get; set; }
@@ -39,6 +42,8 @@ namespace Mooege.Core.GS.Actors
         public Living(World world, int actorSNO, Vector3D position, Dictionary<int, TagMapEntry> tags)
             : base(world, world.NewActorID, position, tags )
         {
+            _game = world.Game;
+
             this.SNOId = actorSNO;
             // FIXME: This is hardcoded crap
             this.Field3 = 0x0;
@@ -60,6 +65,8 @@ namespace Mooege.Core.GS.Actors
             this.Attributes[GameAttribute.Hitpoints_Cur] = 4.546875f;
 
             this.Attributes[GameAttribute.Level] = 1;
+
+            _observers = new List<IObserver<Actor>>();
         }
 
         public override void Update()
@@ -70,6 +77,15 @@ namespace Mooege.Core.GS.Actors
         public virtual void Brain()
         {
             // intellectual activities goes here ;) /raist
+        }
+
+        public virtual void Die(Player player)
+        {
+            _game.QuestEngine.OnDeath(this);
+            foreach (IObserver<Actor> observer in _observers)
+            {
+                observer.OnNext(this);                
+            }
         }
 
         public override bool Reveal(Player player)
@@ -84,6 +100,12 @@ namespace Mooege.Core.GS.Actors
             });
 
             return true;
+        }
+
+        public IDisposable Subscribe(IObserver<Actor> observer)
+        {
+            _observers.Add(observer);
+            return null;
         }
     }
 }

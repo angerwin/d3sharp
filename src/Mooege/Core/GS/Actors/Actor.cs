@@ -301,12 +301,7 @@ namespace Mooege.Core.GS.Actors
             player.InGameClient.SendMessage(new ACDDestroyActorMessage(this.DynamicID));
             player.RevealedObjects.Remove(this.DynamicID);
             return true;
-        }
-
-        public virtual void Die(Player player)
-        {
-            World.Game.QuestEngine.OnDeath(this);            
-        }
+        }       
 
         public virtual void Interaction(Player player)
         {
