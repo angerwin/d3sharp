@@ -129,42 +129,6 @@ namespace Mooege.Net.GS
                 Logger.Trace("Log in time:"+toon.LoginTime.ToString());
 
                 game.Enter(client.Player);
-
-                // TODO: remove me when actors are loaded correctly
-                #region quest NPCs
-
-                Actor leah = new InteractiveNPC(game.StartingWorld, 4580, new Vector3D
-                { 
-                    X = client.Player.Position.X - 10,
-                    Y = client.Player.Position.Y,
-                    Z = client.Player.Position.Z,
-
-                }, new Dictionary<int,Common.MPQ.FileFormats.Types.TagMapEntry>());
-                game.StartingWorld.Enter(leah);
-
-                Actor rumfort = new InteractiveNPC(game.StartingWorld, 3739, new Vector3D
-                {
-                    X = client.Player.Position.X - 20,
-                    Y = client.Player.Position.Y,
-                    Z = client.Player.Position.Z,
-
-                }, new Dictionary<int,Common.MPQ.FileFormats.Types.TagMapEntry>());
-                game.StartingWorld.Enter(rumfort);
-
-
-                /*
-                Actor leah2 = new InteractiveNPC(game.StartWorld, 4580, new Vector3D
-                {
-                    X = 1954.20447f,
-                    Y = 2770.90942f,
-                    Z = 40.24713f,
-
-                });
-                //game.StartWorld.Enter(leah2);
-                */
-
-                #endregion
-
             }
         }    
     }

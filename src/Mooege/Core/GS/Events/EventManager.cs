@@ -91,13 +91,13 @@ namespace Mooege.Core.GS.Events
         {
             for (int i = 0; i < amount; i++)
             {
-                var monster = new Monster(player.World, mobSNO, GetRandomPosition(player), new Dictionary<int, Mooege.Common.MPQ.FileFormats.Types.TagMapEntry>());
+                var monster = new Monster(player.World, mobSNO, GetRandomPosition(player), new Dictionary<int, Mooege.Common.MPQ.FileFormats.Types.TagMapEntry>()) { Scale = 1.35f }; ;
                 player.World.Enter(monster);
             }
         }
         private void SpawnQuestMob(String eventName, Player player, int mobSNO) 
-        {                                       
-            var monster = new QuestMob(eventName, player.World, mobSNO, GetRandomPosition(player), new Dictionary<int,TagMapEntry>());
+        {
+            var monster = new QuestMob(eventName, player.World, mobSNO, GetRandomPosition(player), new Dictionary<int, TagMapEntry>()) { Scale = 1.35f }; ;
             player.World.Enter(monster);                        
         }
 

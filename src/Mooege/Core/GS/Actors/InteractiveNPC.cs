@@ -36,10 +36,5 @@ namespace Mooege.Core.GS.Actors
             this.Attributes[GameAttribute.NPC_Is_Operatable] = true;
             this.Attributes[GameAttribute.Buff_Visual_Effect, 0x00FFFFF] = true;
         }
-
-        public override void OnTargeted(Player player, TargetMessage message)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
