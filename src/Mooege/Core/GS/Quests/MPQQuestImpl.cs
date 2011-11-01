@@ -22,6 +22,7 @@ namespace Mooege.Core.GS.Quests
         private List<QuestStep>.Enumerator _stepEnumerator;
         private List<QuestStepObjectiveSet>.Enumerator _stepObjectiveSetEnumerator;
         private List<IQuestObjective> _objectiveList;
+        private List<IQuestObjective> _bonusObjectiveList;
 
         private Boolean _isFailed = false;
         private Boolean _isCompleted = false;
@@ -106,6 +107,7 @@ namespace Mooege.Core.GS.Quests
                 _isActive = true;
                 this._engine.UpdateQuestStatus(this);
                 AddQuestObjectives(GetQuestStepGoals());
+                AddBonusObjectives(GetQuestStep().StepBonusObjectiveSets);
             }                       
         }       
         
@@ -115,12 +117,20 @@ namespace Mooege.Core.GS.Quests
             NextObjectiveSet();
         }
 
+        private void AddBonusObjectives(List<QuestStepBonusObjectiveSet> objectiveSets)
+        {
+            _bonusObjectiveList = new List<IQuestObjective>();
+            foreach( QuestStepBonusObjectiveSet objectiveSet in objectiveSets){
+                _bonusObjectiveList = RegisterQuestObjectives(objectiveSet.StepBonusObjectives);
+            }
+        }
+
         private void NextObjectiveSet()
         {
             _stepObjectiveSetEnumerator.MoveNext();
             if (_stepObjectiveSetEnumerator.Current != null)
             {
-                AddQuestObjectives(_stepObjectiveSetEnumerator.Current.StepObjectives);
+                _objectiveList = RegisterQuestObjectives(_stepObjectiveSetEnumerator.Current.StepObjectives);
             }
             else
             {
@@ -128,15 +138,14 @@ namespace Mooege.Core.GS.Quests
             }                   
         }
 
-        private void AddQuestObjectives(List<QuestStepObjective> objectiveList)
+        private List<IQuestObjective> RegisterQuestObjectives(List<QuestStepObjective> objectiveList)
         {
-            _objectiveList = new List<IQuestObjective>();
-
+            List<IQuestObjective> objectivesList = new List<IQuestObjective>();
             int objectiveCounter = 0;
             foreach (QuestStepObjective objectiv in objectiveList)
             {
                 IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this, _stepEnumerator.Current, objectiveCounter++);
-                _objectiveList.Add(questObjective);
+                objectivesList.Add(questObjective);
                 _engine.Register(questObjective);
 
                 if (objectiv.ObjectiveType == QuestStepObjectiveType.EnterLevelArea
@@ -173,8 +182,9 @@ namespace Mooege.Core.GS.Quests
                     // FIXME: trigger Mob Spawn
                     _engine.TriggerMobSpawn(objectiv.SNOName1.SNOId, 1);
                 }
-
             }
+
+            return objectivesList;
         }
 
         private List<IQuestObjective> ActiveObjectives

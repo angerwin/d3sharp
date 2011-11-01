@@ -343,7 +343,7 @@ namespace Mooege.Core.GS.Actors
 
         public virtual void OnTargeted(Player player, TargetMessage message)
         {
-
+            Interaction(player);
         }
 
         #endregion

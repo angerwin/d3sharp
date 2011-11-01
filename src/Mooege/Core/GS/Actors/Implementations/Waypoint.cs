@@ -78,6 +78,7 @@ namespace Mooege.Core.GS.Actors.Implementations
 
         public override void OnTargeted(Player player, Net.GS.Message.Definitions.World.TargetMessage message)
         {
+            base.OnTargeted(player, message);
             var world = player.World;
 
             world.BroadcastIfRevealed(new PlayAnimationMessage()
