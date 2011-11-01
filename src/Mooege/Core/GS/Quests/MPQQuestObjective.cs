@@ -74,9 +74,8 @@ namespace Mooege.Core.GS.Quests
         private void Complete()
         {
             _completed = true;
-            _counter = _objectivData.I3;
             _engine.UpdateQuestObjective(this);
-            _quest.ObjectiveComplete(this);            
+            _quest.ObjectiveComplete(this);
         }
 
         public void OnDeath(Actors.Actor actor)

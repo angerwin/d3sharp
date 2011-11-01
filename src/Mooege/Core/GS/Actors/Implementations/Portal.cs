@@ -119,6 +119,7 @@ namespace Mooege.Core.GS.Actors.Implementations
 
         public override void OnTargeted(Player player, TargetMessage message)
         {
+            base.OnTargeted(player, message);
             World world = this.World.Game.GetWorld(this.Destination.WorldSNO);
             if (world == null)
             {

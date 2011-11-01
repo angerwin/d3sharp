@@ -100,6 +100,7 @@ namespace Mooege.Core.GS.Quests
             {
                 _isCompleted = true;
                 _isActive = false;
+                _engine.UpdateQuestStatus(this);
                 _engine.OnQuestCompleted(_questData.Header.SNOId);
             }
             else
@@ -119,6 +120,14 @@ namespace Mooege.Core.GS.Quests
 
         private void AddBonusObjectives(List<QuestStepBonusObjectiveSet> objectiveSets)
         {
+
+            // ensure BonusObjectives are removed from the engine Notifications
+            if (_bonusObjectiveList != null)
+            {
+                foreach (IQuestObjective objectiv in _bonusObjectiveList)
+                    _engine.Unregister(objectiv);
+            }
+
             _bonusObjectiveList = new List<IQuestObjective>();
             foreach( QuestStepBonusObjectiveSet objectiveSet in objectiveSets){
                 _bonusObjectiveList = RegisterQuestObjectives(objectiveSet.StepBonusObjectives);
@@ -140,8 +149,8 @@ namespace Mooege.Core.GS.Quests
 
         private List<IQuestObjective> RegisterQuestObjectives(List<QuestStepObjective> objectiveList)
         {
+            int objectiveCounter = (_objectiveList == null) ? 0 : _objectiveList.Count;
             List<IQuestObjective> objectivesList = new List<IQuestObjective>();
-            int objectiveCounter = 0;
             foreach (QuestStepObjective objectiv in objectiveList)
             {
                 IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this, _stepEnumerator.Current, objectiveCounter++);
@@ -179,8 +188,8 @@ namespace Mooege.Core.GS.Quests
 
                 if (objectiv.ObjectiveType == QuestStepObjectiveType.KillMonster)
                 {
-                    // FIXME: trigger Mob Spawn
-                    _engine.TriggerMobSpawn(objectiv.SNOName1.SNOId, 1);
+                    // FIXME: Mobs shouldn't spawn. But Atm there are not alle mobs loaded/created in the world so spawn them here
+                    _engine.TriggerMobSpawn(objectiv.SNOName1.SNOId, objectiv.I3);
                 }
             }
 
@@ -199,11 +208,20 @@ namespace Mooege.Core.GS.Quests
 
         public void ObjectiveComplete(IQuestObjective objective)
         {
-            _engine.Unregister(objective);            
-            if (ActiveObjectives.Count == 0)
+            _engine.Unregister(objective);
+            if ( !IsBonusObjectiv(objective) )
             {
-                NextObjectiveSet();
+                if (ActiveObjectives.Count == 0)
+                {
+                    NextObjectiveSet();
+                }
             }
+
+        }
+
+        public Boolean IsBonusObjectiv(IQuestObjective objective)
+        {
+            return (_bonusObjectiveList != null && _bonusObjectiveList.Contains(objective));
         }
     }
 }

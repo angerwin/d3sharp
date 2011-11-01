@@ -36,7 +36,7 @@ namespace Mooege.Core.GS.Quests
 
         void OnEnterScene(Map.Scene scene);
 
-        void OnGroupDeath(string _mobGroupName);
+        void OnGroupDeath(string mobGroupName);
     }
 
     public interface QuestEngine : QuestNotifiable
@@ -141,7 +141,7 @@ namespace Mooege.Core.GS.Quests
         private static readonly Logger Logger = LogManager.CreateLogger();
         
         private List<IQuest> _questList;
-        private List<Player> _players;
+        private Player _player;
         private Game _game;
         private MainQuestManager _mainQuestManager;
 
@@ -149,7 +149,6 @@ namespace Mooege.Core.GS.Quests
 
         public PlayerQuestEngine(Game game)
         {
-            this._players = new List<Player>();
             _questList = new List<IQuest>();
             _activeObjectives = new Dictionary<QuestStepObjectiveType, List<IQuestObjective>>();            
             _game = game;
@@ -157,6 +156,9 @@ namespace Mooege.Core.GS.Quests
             LoadQuests();     
         }
 
+        /// <summary>
+        /// Register QuestObjective. QuestObjective will be notified of Questrelevant Events
+        /// </summary>
         public void Register(IQuestObjective objective)
         {
             QuestStepObjectiveType type = objective.GetQuestObjectiveType();
@@ -175,42 +177,42 @@ namespace Mooege.Core.GS.Quests
             objectiveList.Add(objective);
         }
 
+        /// <summary>
+        /// Unregister QuestObjective. QuestObjective will no longer be notified of Questrelevant Events
+        /// </summary>
+        /// <param name="objective"></param>
         public void Unregister(IQuestObjective objective)
         {
             QuestStepObjectiveType type = objective.GetQuestObjectiveType();
-
-            List<IQuestObjective> objectiveList;
+            List<IQuestObjective> objectiveList = null;
             if (_activeObjectives.ContainsKey(type))
             {
                 objectiveList = _activeObjectives[type];
-            }
-            else
-            {
-                objectiveList = new List<IQuestObjective>();
-                _activeObjectives.Add(type, objectiveList);
-            }
-
-            if (objectiveList.Contains(objective))
+            }            
+            
+            if (objectiveList != null && objectiveList.Contains(objective))
             {
                 objectiveList.Remove(objective);
             }
         }
 
+        /// <summary>
+        /// Register Player to QuestEngine.
+        /// </summary>
+        /// <param name="player"></param>
         public void AddPlayer(Player player)
         {
-
-            if (!_players.Contains(player))
-            {
-                _players.Add(player);
-                UpdateAllQuests(player);
-            }
+            if (_player != null)
+                throw new Exception("Just one player allowed in this QuestEngine");
+            
+            _player = player;
+            UpdateAllQuests(player);
+            
         }
 
         public void RemovePlayer(Player player)
         {
-            if(_players.Contains(player)){
-                _players.Remove(player);
-            }
+            player = null;
         }
 
         public void UpdateAllQuests(Player player)
@@ -231,11 +233,8 @@ namespace Mooege.Core.GS.Quests
         private void UpdatePlayers(GameMessage message)
         {
             if (message != null)
-            {
-                foreach (Player player in _players)
-                {
-                    player.InGameClient.SendMessage(message, true);
-                }
+            {                
+                _player.InGameClient.SendMessage(message, true);
             }
         }
 
@@ -331,18 +330,17 @@ namespace Mooege.Core.GS.Quests
             }
         }
 
-
         public void TriggerQuestEvent(String eventName)
         {
             _game.EventManager.StartEvent(eventName);
         }
 
 
-        public void OnGroupDeath(string _mobGroupName)
+        public void OnGroupDeath(string mobGroupName)
         {
             foreach (IQuestObjective objective in GetObjectiveList(QuestStepObjectiveType.KillGroup))
             {
-                objective.OnGroupDeath(_mobGroupName);
+                objective.OnGroupDeath(mobGroupName);
             }  
         }
 

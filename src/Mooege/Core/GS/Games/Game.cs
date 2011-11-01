@@ -141,7 +141,7 @@ namespace Mooege.Core.GS.Games
             loopThread.Start();
 
             // TODO: multiplayer 
-            QuestEngine = new PlayerQuestEngine(this);
+            QuestEngine = new MultiplayerQuestEngine(this);
             EventManager = new DummyEventManager(this);           
         }
 
