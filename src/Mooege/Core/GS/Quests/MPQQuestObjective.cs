@@ -23,14 +23,21 @@ namespace Mooege.Core.GS.Quests
         private IQuest _quest;
         private Boolean _completed;       
         private QuestEngine _engine;
-        
+        private QuestStep _questStepData;
 
-        public QuestObjectivImpl(QuestEngine engine, QuestStepObjective objectivData, IQuest quest)
+        private int _counter;
+        private int _questStepId;
+        private int _id;
+
+        public QuestObjectivImpl(QuestEngine engine, QuestStepObjective objectivData, IQuest quest, QuestStep questStepData, int id)
         {
             this._objectivData = objectivData;
             this._completed = false;
             this._engine = engine;
             this._quest = quest;
+            this._questStepData = questStepData;
+            this._id = id;
+            this._engine.UpdateQuestObjective(this);          
         }
 
         public Boolean IsCompleted()
@@ -45,13 +52,31 @@ namespace Mooege.Core.GS.Quests
 
         public GameMessage CreateUpdateMessage()
         {
-            return null;
+
+            GameMessage msg = null;
+            // QuestStep null means this Objective comms from an QuestUnassignedStep or QuestCompletionStep
+            if (_questStepData != null)
+            {
+                msg = new QuestCounterMessage()
+                {
+                    snoQuest = _quest.SNOId(),
+                    snoLevelArea = -1,
+                    StepID = _questStepData.I0,
+                    TaskIndex = _id,
+                    Counter = _counter,
+                    Checked = _completed ? 1 : 0,
+                };
+
+            }
+            return msg;
         }
 
         private void Complete()
         {
             _completed = true;
-            _quest.ObjectiveComplete(this);
+            _counter = _objectivData.I3;
+            _engine.UpdateQuestObjective(this);
+            _quest.ObjectiveComplete(this);            
         }
 
         public void OnDeath(Actors.Actor actor)
@@ -60,9 +85,22 @@ namespace Mooege.Core.GS.Quests
             {
                 if (actor.SNOId == _objectivData.SNOName1.SNOId)
                 {
-                    Complete();                    
+                    UpdateCounter();
                     return;
                 }
+            }
+        }
+
+        private void UpdateCounter()
+        {
+            _counter++;
+            if (_counter >= _objectivData.I3)
+            {
+                Complete();
+            }
+            else
+            {
+                _engine.UpdateQuestObjective(this);
             }
         }
        
@@ -77,7 +115,7 @@ namespace Mooege.Core.GS.Quests
             {
                 if (_objectivData.SNOName1.SNOId == world.SNOId)
                 {
-                    Complete();
+                    UpdateCounter();
                     return;
                 }
             }
@@ -93,7 +131,7 @@ namespace Mooege.Core.GS.Quests
                     if (conversation.SNOPrimaryNpc == actor.SNOId)
                     {
                         _engine.TriggerConversation(player, conversation, actor);
-                        Complete();
+                        UpdateCounter();
                         return;
                     }
                 }
@@ -107,13 +145,12 @@ namespace Mooege.Core.GS.Quests
             {
                 if (_objectivData.SNOName1.SNOId == actor.SNOId)
                 {
-                   Complete();
+                    UpdateCounter();
                     return;
                 }
             }
 
         }
-
 
         public void OnEvent(String eventName)
         {
@@ -121,12 +158,11 @@ namespace Mooege.Core.GS.Quests
             {
                 if (_objectivData.Unknown1 == eventName)
                 {
-                    Complete();
+                    UpdateCounter();
                     return;
                 }
             }
         }
-
 
         public void OnQuestCompleted(int questSNOId)
         {
@@ -134,12 +170,11 @@ namespace Mooege.Core.GS.Quests
             {
                 if (_objectivData.SNOName1.SNOId == questSNOId)
                 {
-                   Complete();
+                    UpdateCounter();
                     return;
                 }
             }
         }
-
 
         public void OnEnterScene(Map.Scene scene)
         {
@@ -147,18 +182,16 @@ namespace Mooege.Core.GS.Quests
             {
                 if (_objectivData.SNOName1.SNOId == scene.SNOId)
                 {
-                    Complete();
+                    UpdateCounter();
                     return;
                 }
             }
         }
 
-
         public void Cancel()
         {
             Complete();
         }
-
 
         public void OnGroupDeath(string _mobGroupName)
         {
@@ -166,13 +199,10 @@ namespace Mooege.Core.GS.Quests
             {
                 if (_objectivData.Unknown1.Equals(_mobGroupName))
                 {
-                    Complete();
+                    UpdateCounter();
                     return;
                 }
             }
         }
     }
-   
-
-
 }

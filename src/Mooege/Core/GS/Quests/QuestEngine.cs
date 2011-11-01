@@ -56,6 +56,10 @@ namespace Mooege.Core.GS.Quests
         void TriggerQuestEvent(String eventName);
 
         void TriggerMobSpawn(int SNOId, int amount);
+
+        void TriggerConversationSymbol(int p);
+
+        void UpdateQuestObjective(QuestObjectivImpl questObjectivImpl);
     }
 
     public interface IQuest
@@ -256,6 +260,7 @@ namespace Mooege.Core.GS.Quests
         {
             // TODO: Trigger Converstation in an correct way
             player.PlayHeroConversation(conversation.Header.SNOId, 0);
+            //TriggerConversationSymbol(conversation.Header.SNOId);
         }
 
         private List<IQuestObjective> GetObjectiveList(QuestStepObjectiveType type)
@@ -345,6 +350,38 @@ namespace Mooege.Core.GS.Quests
         public void TriggerMobSpawn(int SNOId, int amount)
         {            
             _game.EventManager.SpawnMob(_game.Players.First().Value, SNOId, amount);
+        }
+
+
+        public void TriggerConversationSymbol(int snoId)
+        {
+            if (_game.Players.Count > 0)
+            {
+                GameClient gc = _game.Players.First().Value.InGameClient;
+                if (MPQStorage.Data.Assets[SNOGroup.Conversation].ContainsKey(snoId))
+                {
+                    Conversation conversation = (Conversation)MPQStorage.Data.Assets[SNOGroup.Conversation][snoId].Data;
+
+                    GameMessage msg = new QuestMeterMessage
+                    {
+                        snoQuest = conversation.SNOQuest,
+                        Field1 = (int)_game.Players.First().Value.World.Actors.Values.Where(a => a.SNOId == 4580).ToList().First().DynamicID,
+                        Field2 = 1.35f,
+                    };
+
+                    gc.SendMessage(msg, true);                    
+                }
+            }
+        }
+
+        public void UpdateQuestObjective(QuestObjectivImpl questObjectivImpl)
+        {
+            GameMessage msg = questObjectivImpl.CreateUpdateMessage();
+            if (msg != null)
+            {
+                foreach (var player in _game.Players.Values)
+                    player.InGameClient.SendMessage(msg, true);
+            }
         }
     }
 }

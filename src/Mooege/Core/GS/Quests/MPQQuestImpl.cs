@@ -54,10 +54,11 @@ namespace Mooege.Core.GS.Quests
             
             QuestUpdateMessage message = new QuestUpdateMessage
             {
-                Failed = _isFailed,
-                Field3 = _isActive,
                 snoQuest = _questData.Header.SNOId,
-                StepID = (GetQuestStep() != null) ? GetQuestStep().I0 : -1,                    
+                snoLevelArea = -1,                               
+                StepID = (GetQuestStep() != null) ? GetQuestStep().I0 : -1,                
+                Field3 = true, // maybe _isActive instead??
+                Failed = _isFailed,
             };
             return message;
             
@@ -101,12 +102,11 @@ namespace Mooege.Core.GS.Quests
                 _engine.OnQuestCompleted(_questData.Header.SNOId);
             }
             else
-            {
+            {                
                 _isActive = true;
+                this._engine.UpdateQuestStatus(this);
                 AddQuestObjectives(GetQuestStepGoals());
-            }
-
-            this._engine.UpdateQuestStatus(this);
+            }                       
         }       
         
         private void AddQuestObjectives(List<QuestStepObjectiveSet> objectiveSets)
@@ -125,16 +125,17 @@ namespace Mooege.Core.GS.Quests
             else
             {
                 NextQuestStep();
-            }
+            }                   
         }
 
         private void AddQuestObjectives(List<QuestStepObjective> objectiveList)
         {
             _objectiveList = new List<IQuestObjective>();
+
+            int objectiveCounter = 0;
             foreach (QuestStepObjective objectiv in objectiveList)
             {
-
-                IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this);
+                IQuestObjective questObjective = new QuestObjectivImpl(_engine, objectiv, this, _stepEnumerator.Current, objectiveCounter++);
                 _objectiveList.Add(questObjective);
                 _engine.Register(questObjective);
 
@@ -154,6 +155,12 @@ namespace Mooege.Core.GS.Quests
                 if (objectiv.ObjectiveType == QuestStepObjectiveType.EventReceived)
                 {
                     _engine.TriggerQuestEvent(objectiv.Unknown1);
+                }
+
+                // TODO: find an better way to Trigger an Conversation than observing the QuestStepObjectives...
+                if (objectiv.ObjectiveType == QuestStepObjectiveType.HadConversation)
+                {
+                    _engine.TriggerConversationSymbol(objectiv.SNOName1.SNOId);
                 }
 
                 if (objectiv.ObjectiveType == QuestStepObjectiveType.KillGroup)
@@ -182,7 +189,7 @@ namespace Mooege.Core.GS.Quests
 
         public void ObjectiveComplete(IQuestObjective objective)
         {
-            _engine.Unregister(objective);
+            _engine.Unregister(objective);            
             if (ActiveObjectives.Count == 0)
             {
                 NextObjectiveSet();
